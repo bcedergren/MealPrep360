@@ -1,0 +1,505 @@
+name: Continuous Integration
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+env:
+  NODE_VERSION: '18'
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  # ==========================================
+  # Lint and Format Check
+  # ==========================================
+  lint:
+    name: Lint and Format Check
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+
+    - name: Install dependencies - Frontend
+      run: |
+        cd services/frontend
+        npm ci
+
+    - name: Install dependencies - Admin
+      run: |
+        cd services/admin
+        npm ci
+
+    - name: Install dependencies - API Gateway
+      run: |
+        cd services/api-gateway
+        npm ci
+
+    - name: Install dependencies - Recipe Service
+      run: |
+        cd services/recipe-service
+        npm ci
+
+    - name: Install dependencies - Meal Plan Service
+      run: |
+        cd services/meal-plan-service
+        npm ci
+
+    - name: Install dependencies - Shopping Service
+      run: |
+        cd services/shopping-service
+        npm ci
+
+    - name: Install dependencies - Social Service
+      run: |
+        cd services/social-service
+        npm ci
+
+    - name: Install dependencies - Blog Service
+      run: |
+        cd services/blog-service
+        npm ci
+
+    - name: Install dependencies - WebSocket Server
+      run: |
+        cd services/websocket-server
+        npm ci
+
+    - name: Lint Frontend
+      run: |
+        cd services/frontend
+        npm run lint
+
+    - name: Lint Admin
+      run: |
+        cd services/admin
+        npm run lint
+
+    - name: Lint API Gateway
+      run: |
+        cd services/api-gateway
+        npm run lint
+
+    - name: Lint Recipe Service
+      run: |
+        cd services/recipe-service
+        npm run lint
+
+    - name: Lint Meal Plan Service
+      run: |
+        cd services/meal-plan-service
+        npm run lint
+
+    - name: Lint Shopping Service
+      run: |
+        cd services/shopping-service
+        npm run lint
+
+    - name: Lint Social Service
+      run: |
+        cd services/social-service
+        npm run lint
+
+    - name: Lint Blog Service
+      run: |
+        cd services/blog-service
+        npm run lint
+
+    - name: Lint WebSocket Server
+      run: |
+        cd services/websocket-server
+        npm run lint
+
+  # ==========================================
+  # Type Checking
+  # ==========================================
+  type-check:
+    name: TypeScript Type Check
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+
+    - name: Install dependencies - Frontend
+      run: |
+        cd services/frontend
+        npm ci
+
+    - name: Install dependencies - Admin
+      run: |
+        cd services/admin
+        npm ci
+
+    - name: Install dependencies - API Gateway
+      run: |
+        cd services/api-gateway
+        npm ci
+
+    - name: Install dependencies - Recipe Service
+      run: |
+        cd services/recipe-service
+        npm ci
+
+    - name: Install dependencies - Meal Plan Service
+      run: |
+        cd services/meal-plan-service
+        npm ci
+
+    - name: Install dependencies - Shopping Service
+      run: |
+        cd services/shopping-service
+        npm ci
+
+    - name: Install dependencies - Social Service
+      run: |
+        cd services/social-service
+        npm ci
+
+    - name: Install dependencies - Blog Service
+      run: |
+        cd services/blog-service
+        npm ci
+
+    - name: Install dependencies - WebSocket Server
+      run: |
+        cd services/websocket-server
+        npm ci
+
+    - name: Type Check Frontend
+      run: |
+        cd services/frontend
+        npm run type-check || npx tsc --noEmit
+
+    - name: Type Check Admin
+      run: |
+        cd services/admin
+        npm run type-check || npx tsc --noEmit
+
+    - name: Type Check API Gateway
+      run: |
+        cd services/api-gateway
+        npm run type-check || npx tsc --noEmit
+
+    - name: Type Check Recipe Service
+      run: |
+        cd services/recipe-service
+        npm run type-check || npx tsc --noEmit
+
+    - name: Type Check Meal Plan Service
+      run: |
+        cd services/meal-plan-service
+        npm run type-check || npx tsc --noEmit
+
+    - name: Type Check Shopping Service
+      run: |
+        cd services/shopping-service
+        npm run type-check || npx tsc --noEmit
+
+    - name: Type Check Social Service
+      run: |
+        cd services/social-service
+        npm run type-check || npx tsc --noEmit
+
+    - name: Type Check Blog Service
+      run: |
+        cd services/blog-service
+        npm run type-check || npx tsc --noEmit
+
+    - name: Type Check WebSocket Server
+      run: |
+        cd services/websocket-server
+        npm run type-check || npx tsc --noEmit
+
+  # ==========================================
+  # Unit Tests
+  # ==========================================
+  test:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    
+    services:
+      mongodb:
+        image: mongo:6.0
+        ports:
+          - 27017:27017
+        options: >-
+          --health-cmd "mongosh --eval 'db.adminCommand(\"ping\")'"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+
+    - name: Install dependencies - Frontend
+      run: |
+        cd services/frontend
+        npm ci
+
+    - name: Install dependencies - Admin
+      run: |
+        cd services/admin
+        npm ci
+
+    - name: Install dependencies - API Gateway
+      run: |
+        cd services/api-gateway
+        npm ci
+
+    - name: Install dependencies - Recipe Service
+      run: |
+        cd services/recipe-service
+        npm ci
+
+    - name: Install dependencies - Meal Plan Service
+      run: |
+        cd services/meal-plan-service
+        npm ci
+
+    - name: Install dependencies - Shopping Service
+      run: |
+        cd services/shopping-service
+        npm ci
+
+    - name: Install dependencies - Social Service
+      run: |
+        cd services/social-service
+        npm ci
+
+    - name: Install dependencies - Blog Service
+      run: |
+        cd services/blog-service
+        npm ci
+
+    - name: Install dependencies - WebSocket Server
+      run: |
+        cd services/websocket-server
+        npm ci
+
+    - name: Run tests - Frontend
+      run: |
+        cd services/frontend
+        npm test -- --coverage --watchAll=false
+      env:
+        NODE_ENV: test
+
+    - name: Run tests - Admin
+      run: |
+        cd services/admin
+        npm test -- --coverage --watchAll=false
+      env:
+        NODE_ENV: test
+
+    - name: Run tests - API Gateway
+      run: |
+        cd services/api-gateway
+        npm test -- --coverage --watchAll=false
+      env:
+        NODE_ENV: test
+
+    - name: Run tests - Recipe Service
+      run: |
+        cd services/recipe-service
+        npm test -- --coverage --watchAll=false
+      env:
+        NODE_ENV: test
+
+    - name: Run tests - Meal Plan Service
+      run: |
+        cd services/meal-plan-service
+        npm test -- --coverage --watchAll=false
+      env:
+        NODE_ENV: test
+
+    - name: Run tests - Shopping Service
+      run: |
+        cd services/shopping-service
+        npm test -- --coverage --watchAll=false
+      env:
+        NODE_ENV: test
+
+    - name: Run tests - Social Service
+      run: |
+        cd services/social-service
+        npm test -- --coverage --watchAll=false
+      env:
+        NODE_ENV: test
+
+    - name: Run tests - Blog Service
+      run: |
+        cd services/blog-service
+        npm test -- --coverage --watchAll=false
+      env:
+        NODE_ENV: test
+
+    - name: Run tests - WebSocket Server
+      run: |
+        cd services/websocket-server
+        npm test -- --coverage --watchAll=false
+      env:
+        NODE_ENV: test
+
+    - name: Upload coverage reports
+      uses: codecov/codecov-action@v3
+      with:
+        files: ./services/*/coverage/lcov.info
+        flags: unittests
+        name: codecov-umbrella
+        fail_ci_if_error: false
+
+  # ==========================================
+  # Build Services
+  # ==========================================
+  build:
+    name: Build Services
+    runs-on: ubuntu-latest
+    needs: [lint, type-check, test]
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+
+    - name: Install dependencies - Frontend
+      run: |
+        cd services/frontend
+        npm ci
+
+    - name: Install dependencies - Admin
+      run: |
+        cd services/admin
+        npm ci
+
+    - name: Install dependencies - API Gateway
+      run: |
+        cd services/api-gateway
+        npm ci
+
+    - name: Install dependencies - Recipe Service
+      run: |
+        cd services/recipe-service
+        npm ci
+
+    - name: Install dependencies - Meal Plan Service
+      run: |
+        cd services/meal-plan-service
+        npm ci
+
+    - name: Install dependencies - Shopping Service
+      run: |
+        cd services/shopping-service
+        npm ci
+
+    - name: Install dependencies - Social Service
+      run: |
+        cd services/social-service
+        npm ci
+
+    - name: Install dependencies - Blog Service
+      run: |
+        cd services/blog-service
+        npm ci
+
+    - name: Install dependencies - WebSocket Server
+      run: |
+        cd services/websocket-server
+        npm ci
+
+    - name: Build Frontend
+      run: |
+        cd services/frontend
+        npm run build
+
+    - name: Build Admin
+      run: |
+        cd services/admin
+        npm run build
+
+    - name: Build API Gateway
+      run: |
+        cd services/api-gateway
+        npm run build
+
+    - name: Build Recipe Service
+      run: |
+        cd services/recipe-service
+        npm run build
+
+    - name: Build Meal Plan Service
+      run: |
+        cd services/meal-plan-service
+        npm run build
+
+    - name: Build Shopping Service
+      run: |
+        cd services/shopping-service
+        npm run build
+
+    - name: Build Social Service
+      run: |
+        cd services/social-service
+        npm run build
+
+    - name: Build Blog Service
+      run: |
+        cd services/blog-service
+        npm run build
+
+    - name: Build WebSocket Server
+      run: |
+        cd services/websocket-server
+        npm run build
+
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: build-artifacts
+        path: |
+          services/frontend/.next
+          services/admin/.next
+          services/api-gateway/.next
+          services/recipe-service/dist
+          services/meal-plan-service/dist
+          services/shopping-service/dist
+          services/social-service/dist
+          services/blog-service/dist
+          services/websocket-server/dist
+        retention-days: 1

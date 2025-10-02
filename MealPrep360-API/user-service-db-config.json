@@ -1,0 +1,12 @@
+{
+  "name": "mealprep360_users",
+  "connectionString": "mongodb://localhost:27017/mealprep360_users",
+  "collections": [
+    "users",
+    "user_preferences",
+    "user_settings",
+    "user_subscriptions",
+    "user_sessions",
+    "user_profiles"
+  ]
+}

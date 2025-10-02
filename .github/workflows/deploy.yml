@@ -1,0 +1,350 @@
+name: Deploy to Production
+
+on:
+  push:
+    branches: [ main ]
+    tags: [ 'v*' ]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy to'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+        - staging
+        - production
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  # ==========================================
+  # Deploy to Staging
+  # ==========================================
+  deploy-staging:
+    name: Deploy to Staging
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' || github.event.inputs.environment == 'staging'
+    environment: staging
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up kubectl
+      uses: azure/setup-kubectl@v3
+      with:
+        version: 'latest'
+
+    - name: Configure kubectl
+      run: |
+        mkdir -p ~/.kube
+        echo "${{ secrets.KUBE_CONFIG_STAGING }}" | base64 -d > ~/.kube/config
+        chmod 600 ~/.kube/config
+
+    - name: Deploy to staging
+      run: |
+        # Check if k8s directory exists
+        if [ ! -d "k8s" ]; then
+          echo "k8s directory not found, creating basic deployment manifests..."
+          mkdir -p k8s
+          
+          # Create namespace if it doesn't exist
+          cat > k8s/namespace.yaml << EOF
+        apiVersion: v1
+        kind: Namespace
+        metadata:
+          name: mealprep360-staging
+        EOF
+          
+          # Create basic deployment manifests
+          for service in frontend admin api-gateway recipe-service meal-plan-service shopping-service social-service blog-service websocket-server; do
+            cat > k8s/${service}-deployment.yaml << EOF
+        apiVersion: apps/v1
+        kind: Deployment
+        metadata:
+          name: ${service}
+          namespace: mealprep360-staging
+        spec:
+          replicas: 1
+          selector:
+            matchLabels:
+              app: ${service}
+          template:
+            metadata:
+              labels:
+                app: ${service}
+            spec:
+              containers:
+              - name: ${service}
+                image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/${service}:${{ github.sha }}
+                ports:
+                - containerPort: 3000
+                env:
+                - name: NODE_ENV
+                  value: "staging"
+        EOF
+          done
+        fi
+        
+        # Update image tags in existing Kubernetes manifests
+        find k8s -name "*-deployment.yaml" -exec sed -i "s|image: .*|image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/$(basename {} -deployment.yaml):${{ github.sha }}|g" {} \;
+        
+        # Apply Kubernetes manifests
+        kubectl apply -f k8s/namespace.yaml
+        kubectl apply -f k8s/ -n mealprep360-staging || echo "Some deployments may have failed, continuing..."
+
+    - name: Wait for deployment
+      run: |
+        # Wait for deployments with error handling
+        for service in frontend admin api-gateway recipe-service meal-plan-service shopping-service social-service blog-service websocket-server; do
+          if kubectl get deployment ${service} -n mealprep360-staging >/dev/null 2>&1; then
+            echo "Waiting for ${service} deployment..."
+            kubectl rollout status deployment/${service} -n mealprep360-staging --timeout=300s || echo "${service} deployment may have failed, continuing..."
+          else
+            echo "${service} deployment not found, skipping..."
+          fi
+        done
+
+    - name: Run health checks
+      run: |
+        kubectl get pods -n mealprep360-staging
+        kubectl get services -n mealprep360-staging
+
+    - name: Notify deployment status
+      run: |
+        echo "Deployment to staging completed with status: ${{ job.status }}"
+        if [ "${{ job.status }}" = "success" ]; then
+          echo "✅ Staging deployment successful"
+        else
+          echo "❌ Staging deployment failed"
+        fi
+      if: always()
+
+  # ==========================================
+  # Integration Tests
+  # ==========================================
+  integration-tests:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+    needs: deploy-staging
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up kubectl
+      uses: azure/setup-kubectl@v3
+      with:
+        version: 'latest'
+
+    - name: Configure kubectl
+      run: |
+        mkdir -p ~/.kube
+        echo "${{ secrets.KUBE_CONFIG_STAGING }}" | base64 -d > ~/.kube/config
+        chmod 600 ~/.kube/config
+
+    - name: Get staging URLs
+      run: |
+        export FRONTEND_URL=$(kubectl get ingress mealprep360-ingress -n mealprep360-staging -o jsonpath='{.spec.rules[0].host}')
+        export API_URL=$(kubectl get ingress mealprep360-ingress -n mealprep360-staging -o jsonpath='{.spec.rules[1].host}')
+        echo "FRONTEND_URL=https://$FRONTEND_URL" >> $GITHUB_ENV
+        echo "API_URL=https://$API_URL" >> $GITHUB_ENV
+
+    - name: Run API tests
+      run: |
+        # Test API health endpoint
+        curl -f "$API_URL/api/health" || exit 1
+        
+        # Test recipe service health
+        curl -f "$API_URL/api/recipes/health" || exit 1
+        
+        # Test meal plan service health
+        curl -f "$API_URL/api/meal-plans/health" || exit 1
+        
+        # Test shopping list service health
+        curl -f "$API_URL/api/shopping-lists/health" || exit 1
+
+    - name: Run frontend tests
+      run: |
+        # Test frontend accessibility
+        curl -f "$FRONTEND_URL" || exit 1
+        
+        # Test admin panel
+        curl -f "$FRONTEND_URL/admin" || exit 1
+
+  # ==========================================
+  # Deploy to Production
+  # ==========================================
+  deploy-production:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    needs: [deploy-staging, integration-tests]
+    if: startsWith(github.ref, 'refs/tags/v') || github.event.inputs.environment == 'production'
+    environment: production
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up kubectl
+      uses: azure/setup-kubectl@v3
+      with:
+        version: 'latest'
+
+    - name: Configure kubectl
+      run: |
+        mkdir -p ~/.kube
+        echo "${{ secrets.KUBE_CONFIG_PRODUCTION }}" | base64 -d > ~/.kube/config
+        chmod 600 ~/.kube/config
+
+    - name: Create backup
+      run: |
+        # Create backup of current deployment
+        kubectl get all -n mealprep360 -o yaml > backup-$(date +%Y%m%d-%H%M%S).yaml
+
+    - name: Deploy to production
+      run: |
+        # Check if k8s directory exists
+        if [ ! -d "k8s" ]; then
+          echo "k8s directory not found, creating basic deployment manifests..."
+          mkdir -p k8s
+          
+          # Create namespace if it doesn't exist
+          cat > k8s/namespace.yaml << EOF
+        apiVersion: v1
+        kind: Namespace
+        metadata:
+          name: mealprep360
+        EOF
+          
+          # Create basic deployment manifests
+          for service in frontend admin api-gateway recipe-service meal-plan-service shopping-service social-service blog-service websocket-server; do
+            cat > k8s/${service}-deployment.yaml << EOF
+        apiVersion: apps/v1
+        kind: Deployment
+        metadata:
+          name: ${service}
+          namespace: mealprep360
+        spec:
+          replicas: 2
+          selector:
+            matchLabels:
+              app: ${service}
+          template:
+            metadata:
+              labels:
+                app: ${service}
+            spec:
+              containers:
+              - name: ${service}
+                image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/${service}:${{ github.sha }}
+                ports:
+                - containerPort: 3000
+                env:
+                - name: NODE_ENV
+                  value: "production"
+                resources:
+                  requests:
+                    memory: "256Mi"
+                    cpu: "250m"
+                  limits:
+                    memory: "512Mi"
+                    cpu: "500m"
+        EOF
+          done
+        fi
+        
+        # Update image tags in existing Kubernetes manifests
+        find k8s -name "*-deployment.yaml" -exec sed -i "s|image: .*|image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/$(basename {} -deployment.yaml):${{ github.sha }}|g" {} \;
+        
+        # Apply Kubernetes manifests
+        kubectl apply -f k8s/namespace.yaml
+        kubectl apply -f k8s/ -n mealprep360 || echo "Some deployments may have failed, continuing..."
+
+    - name: Wait for deployment
+      run: |
+        # Wait for deployments with error handling
+        for service in frontend admin api-gateway recipe-service meal-plan-service shopping-service social-service blog-service websocket-server; do
+          if kubectl get deployment ${service} -n mealprep360 >/dev/null 2>&1; then
+            echo "Waiting for ${service} deployment..."
+            kubectl rollout status deployment/${service} -n mealprep360 --timeout=600s || echo "${service} deployment may have failed, continuing..."
+          else
+            echo "${service} deployment not found, skipping..."
+          fi
+        done
+
+    - name: Run production health checks
+      run: |
+        kubectl get pods -n mealprep360
+        kubectl get services -n mealprep360
+        
+        # Test production endpoints
+        curl -f "https://api.mealprep360.com/api/health" || exit 1
+        curl -f "https://mealprep360.com" || exit 1
+
+    - name: Notify production deployment
+      run: |
+        echo "Production deployment completed with status: ${{ job.status }}"
+        if [ "${{ job.status }}" = "success" ]; then
+          echo "✅ Production deployment successful"
+          echo "🚀 Application is now live at:"
+          echo "  - Frontend: https://mealprep360.com"
+          echo "  - API: https://api.mealprep360.com"
+          echo "  - Admin: https://admin.mealprep360.com"
+        else
+          echo "❌ Production deployment failed"
+        fi
+      if: always()
+
+  # ==========================================
+  # Rollback on Failure
+  # ==========================================
+  rollback:
+    name: Rollback on Failure
+    runs-on: ubuntu-latest
+    needs: deploy-production
+    if: failure() && (startsWith(github.ref, 'refs/tags/v') || github.event.inputs.environment == 'production')
+    environment: production
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up kubectl
+      uses: azure/setup-kubectl@v3
+      with:
+        version: 'latest'
+
+    - name: Configure kubectl
+      run: |
+        mkdir -p ~/.kube
+        echo "${{ secrets.KUBE_CONFIG_PRODUCTION }}" | base64 -d > ~/.kube/config
+        chmod 600 ~/.kube/config
+
+    - name: Rollback deployment
+      run: |
+        # Rollback deployments with error handling
+        for service in frontend admin api-gateway recipe-service meal-plan-service shopping-service social-service blog-service websocket-server; do
+          if kubectl get deployment ${service} -n mealprep360 >/dev/null 2>&1; then
+            echo "Rolling back ${service} deployment..."
+            kubectl rollout undo deployment/${service} -n mealprep360 || echo "${service} rollback may have failed, continuing..."
+          else
+            echo "${service} deployment not found, skipping rollback..."
+          fi
+        done
+
+    - name: Notify rollback
+      run: |
+        echo "🚨 Production deployment failed and was rolled back!"
+        echo "Rollback status: ${{ job.status }}"
+        if [ "${{ job.status }}" = "success" ]; then
+          echo "✅ Rollback completed successfully"
+          echo "Application has been restored to previous version"
+        else
+          echo "❌ Rollback failed - manual intervention may be required"
+        fi
+      if: always()

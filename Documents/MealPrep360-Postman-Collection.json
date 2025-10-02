@@ -1,0 +1,948 @@
+{
+	"info": {
+		"name": "MealPrep360 API Collection",
+		"description": "Complete API collection for all MealPrep360 microservices",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{clerk_session_token}}",
+				"type": "string"
+			}
+		]
+	},
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "https://api.mealprep360.com",
+			"type": "string"
+		},
+		{
+			"key": "recipe_service_url",
+			"value": "https://recipe-service.mealprep360.com",
+			"type": "string"
+		},
+		{
+			"key": "meal_plan_service_url",
+			"value": "https://meal-plan-service.mealprep360.com",
+			"type": "string"
+		},
+		{
+			"key": "blog_service_url",
+			"value": "https://blog-service.mealprep360.com",
+			"type": "string"
+		},
+		{
+			"key": "social_service_url",
+			"value": "https://social-service.mealprep360.com",
+			"type": "string"
+		},
+		{
+			"key": "admin_service_url",
+			"value": "https://admin.mealprep360.com",
+			"type": "string"
+		},
+		{
+			"key": "shopping_service_url",
+			"value": "https://shopping-service.mealprep360.com",
+			"type": "string"
+		},
+		{
+			"key": "clerk_session_token",
+			"value": "your_clerk_session_token_here",
+			"type": "string"
+		},
+		{
+			"key": "recipe_service_api_key",
+			"value": "your_recipe_service_api_key",
+			"type": "string"
+		}
+	],
+	"item": [
+		{
+			"name": "Main API Service",
+			"item": [
+				{
+					"name": "Authentication & Health",
+					"item": [
+						{
+							"name": "Test API",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/test",
+									"host": ["{{base_url}}"],
+									"path": ["api", "test"]
+								}
+							}
+						},
+						{
+							"name": "Test MongoDB Connection",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/test-mongodb",
+									"host": ["{{base_url}}"],
+									"path": ["api", "test-mongodb"]
+								}
+							}
+						}
+					]
+				},
+				{
+					"name": "Recipes",
+					"item": [
+						{
+							"name": "Get Recipes",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/recipes?page=1&limit=15&search=chicken&tags=healthy,quick&sortBy=createdAt&sortOrder=desc&prepTime=quick",
+									"host": ["{{base_url}}"],
+									"path": ["api", "recipes"],
+									"query": [
+										{ "key": "page", "value": "1" },
+										{ "key": "limit", "value": "15" },
+										{ "key": "search", "value": "chicken" },
+										{ "key": "tags", "value": "healthy,quick" },
+										{ "key": "sortBy", "value": "createdAt" },
+										{ "key": "sortOrder", "value": "desc" },
+										{ "key": "prepTime", "value": "quick" }
+									]
+								}
+							}
+						},
+						{
+							"name": "Create Recipe",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"title\": \"Healthy Chicken Stir Fry\",\n  \"description\": \"Quick and nutritious chicken stir fry with fresh vegetables\",\n  \"ingredients\": [\"2 chicken breasts\", \"1 cup broccoli\", \"2 tbsp soy sauce\", \"1 tbsp olive oil\"],\n  \"instructions\": [\"Cut chicken into bite-sized pieces\", \"Heat oil in pan\", \"Cook chicken until golden\", \"Add vegetables and sauce\"],\n  \"prepTime\": 15,\n  \"cookTime\": 20,\n  \"servings\": 4,\n  \"difficulty\": \"easy\",\n  \"cuisine\": \"Asian\",\n  \"mealType\": \"dinner\",\n  \"category\": \"Main Course\",\n  \"tags\": [\"quick\", \"healthy\", \"protein\"],\n  \"allergenInfo\": [\"SOY\"],\n  \"dietaryInfo\": [\"GLUTEN_FREE\"],\n  \"nutrition\": {\n    \"calories\": 320,\n    \"protein\": 35,\n    \"carbs\": 12,\n    \"fat\": 15,\n    \"fiber\": 4,\n    \"sugar\": 8,\n    \"sodium\": 680\n  }\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/api/recipes",
+									"host": ["{{base_url}}"],
+									"path": ["api", "recipes"]
+								}
+							}
+						},
+						{
+							"name": "Save/Unsave Recipe",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"action\": \"save\"\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/api/recipes/{{recipe_id}}/saved",
+									"host": ["{{base_url}}"],
+									"path": ["api", "recipes", "{{recipe_id}}", "saved"]
+								}
+							}
+						}
+					]
+				},
+				{
+					"name": "Meal Plans",
+					"item": [
+						{
+							"name": "Get Meal Plans",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/meal-plans?startDate=2024-01-01&endDate=2024-01-07",
+									"host": ["{{base_url}}"],
+									"path": ["api", "meal-plans"],
+									"query": [
+										{ "key": "startDate", "value": "2024-01-01" },
+										{ "key": "endDate", "value": "2024-01-07" }
+									]
+								}
+							}
+						},
+						{
+							"name": "Create Meal Plan",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"date\": \"2024-01-01\",\n  \"recipeId\": \"recipe_id_here\",\n  \"servings\": 4\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/api/meal-plans",
+									"host": ["{{base_url}}"],
+									"path": ["api", "meal-plans"]
+								}
+							}
+						},
+						{
+							"name": "Update Meal Plan Day",
+							"request": {
+								"method": "PATCH",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"recipeId\": \"new_recipe_id\",\n  \"status\": \"completed\"\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/api/meal-plans/{{meal_plan_id}}/days/{{day_index}}",
+									"host": ["{{base_url}}"],
+									"path": [
+										"api",
+										"meal-plans",
+										"{{meal_plan_id}}",
+										"days",
+										"{{day_index}}"
+									]
+								}
+							}
+						},
+						{
+							"name": "Skip Meal Plan Date",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"date\": \"2024-01-01\",\n  \"reason\": \"dining out\"\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/api/meal-plans/skip-date",
+									"host": ["{{base_url}}"],
+									"path": ["api", "meal-plans", "skip-date"]
+								}
+							}
+						}
+					]
+				},
+				{
+					"name": "Shopping Lists",
+					"item": [
+						{
+							"name": "Get Shopping Lists",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/shopping-lists",
+									"host": ["{{base_url}}"],
+									"path": ["api", "shopping-lists"]
+								}
+							}
+						},
+						{
+							"name": "Generate Shopping List",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"mealPlanId\": \"meal_plan_id_here\",\n  \"startDate\": \"2024-01-01\",\n  \"endDate\": \"2024-01-07\",\n  \"pantryExclusions\": [\"salt\", \"pepper\", \"olive oil\"]\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/api/shopping-lists/generate",
+									"host": ["{{base_url}}"],
+									"path": ["api", "shopping-lists", "generate"]
+								}
+							}
+						}
+					]
+				},
+				{
+					"name": "User Management",
+					"item": [
+						{
+							"name": "Get User Profile",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/user",
+									"host": ["{{base_url}}"],
+									"path": ["api", "user"]
+								}
+							}
+						},
+						{
+							"name": "Get User Settings",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/user/settings",
+									"host": ["{{base_url}}"],
+									"path": ["api", "user", "settings"]
+								}
+							}
+						},
+						{
+							"name": "Update User Settings",
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"theme\": {\n    \"mode\": \"dark\"\n  },\n  \"preferences\": {\n    \"dietaryPreferences\": [\"vegetarian\"],\n    \"allergies\": [\"nuts\"]\n  },\n  \"notifications\": {\n    \"email\": true,\n    \"push\": false\n  }\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/api/user/settings",
+									"host": ["{{base_url}}"],
+									"path": ["api", "user", "settings"]
+								}
+							}
+						}
+					]
+				},
+				{
+					"name": "AI Features",
+					"item": [
+						{
+							"name": "AI Test",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/ai/test",
+									"host": ["{{base_url}}"],
+									"path": ["api", "ai", "test"]
+								}
+							}
+						},
+						{
+							"name": "Generate AI Recipe",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"type\": \"recipe\",\n  \"query\": \"healthy chicken dinner for 4 people\",\n  \"preferences\": {\n    \"dietaryRestrictions\": [\"gluten-free\"],\n    \"cuisineType\": \"Mediterranean\",\n    \"cookingTime\": 30\n  }\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/api/ai",
+									"host": ["{{base_url}}"],
+									"path": ["api", "ai"]
+								}
+							}
+						},
+						{
+							"name": "Get AI Suggestions",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"query\": \"quick pasta dinner\"\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/api/ai/suggestions",
+									"host": ["{{base_url}}"],
+									"path": ["api", "ai", "suggestions"]
+								}
+							}
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "Recipe Service",
+			"item": [
+				{
+					"name": "Health Check",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "x-api-key",
+								"value": "{{recipe_service_api_key}}"
+							}
+						],
+						"url": {
+							"raw": "{{recipe_service_url}}/health",
+							"host": ["{{recipe_service_url}}"],
+							"path": ["health"]
+						}
+					}
+				},
+				{
+					"name": "Get Metrics",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "x-api-key",
+								"value": "{{recipe_service_api_key}}"
+							}
+						],
+						"url": {
+							"raw": "{{recipe_service_url}}/metrics",
+							"host": ["{{recipe_service_url}}"],
+							"path": ["metrics"]
+						}
+					}
+				},
+				{
+					"name": "List Recipes",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "x-api-key",
+								"value": "{{recipe_service_api_key}}"
+							}
+						],
+						"url": {
+							"raw": "{{recipe_service_url}}/recipes?page=1&limit=10&season=spring&search=chicken",
+							"host": ["{{recipe_service_url}}"],
+							"path": ["recipes"],
+							"query": [
+								{ "key": "page", "value": "1" },
+								{ "key": "limit", "value": "10" },
+								{ "key": "season", "value": "spring" },
+								{ "key": "search", "value": "chicken" }
+							]
+						}
+					}
+				},
+				{
+					"name": "Validate Recipes",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "x-api-key",
+								"value": "{{recipe_service_api_key}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{}"
+						},
+						"url": {
+							"raw": "{{recipe_service_url}}/recipes/validate",
+							"host": ["{{recipe_service_url}}"],
+							"path": ["recipes", "validate"]
+						}
+					}
+				},
+				{
+					"name": "Audit Recipe",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "x-api-key",
+								"value": "{{recipe_service_api_key}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"Test Recipe\",\n  \"ingredients\": [\"1 cup flour\", \"2 eggs\"],\n  \"instructions\": [\"Mix ingredients\", \"Bake for 30 minutes\"],\n  \"prepTime\": 10,\n  \"cookTime\": 30,\n  \"servings\": 4\n}"
+						},
+						"url": {
+							"raw": "{{recipe_service_url}}/recipes/audit-recipe",
+							"host": ["{{recipe_service_url}}"],
+							"path": ["recipes", "audit-recipe"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Meal Plan Service",
+			"item": [
+				{
+					"name": "Health Check",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{meal_plan_service_url}}/api/health",
+							"host": ["{{meal_plan_service_url}}"],
+							"path": ["api", "health"]
+						}
+					}
+				},
+				{
+					"name": "Get Meal Plans",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "x-user-id",
+								"value": "{{user_id}}"
+							}
+						],
+						"url": {
+							"raw": "{{meal_plan_service_url}}/api/meal-plans",
+							"host": ["{{meal_plan_service_url}}"],
+							"path": ["api", "meal-plans"]
+						}
+					}
+				},
+				{
+					"name": "Create Meal Plan",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "x-user-id",
+								"value": "{{user_id}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"startDate\": \"2024-01-01\",\n  \"endDate\": \"2024-01-07\",\n  \"recipes\": [\n    {\n      \"recipeId\": \"recipe_id_1\",\n      \"date\": \"2024-01-01\",\n      \"mealType\": \"dinner\",\n      \"servings\": 4\n    }\n  ]\n}"
+						},
+						"url": {
+							"raw": "{{meal_plan_service_url}}/api/meal-plans",
+							"host": ["{{meal_plan_service_url}}"],
+							"path": ["api", "meal-plans"]
+						}
+					}
+				},
+				{
+					"name": "Skip Date",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "x-user-id",
+								"value": "{{user_id}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"date\": \"2024-01-01\",\n  \"reason\": \"dining out\"\n}"
+						},
+						"url": {
+							"raw": "{{meal_plan_service_url}}/api/meal-plans/skip-date",
+							"host": ["{{meal_plan_service_url}}"],
+							"path": ["api", "meal-plans", "skip-date"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Shopping List Service",
+			"item": [
+				{
+					"name": "Health Check",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{shopping_service_url}}/api/health",
+							"host": ["{{shopping_service_url}}"],
+							"path": ["api", "health"]
+						}
+					}
+				},
+				{
+					"name": "Generate Shopping List",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "x-user-id",
+								"value": "{{user_id}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"userId\": \"{{user_id}}\",\n  \"mealPlanId\": \"meal_plan_id_here\",\n  \"pantryExclusions\": [\"salt\", \"pepper\", \"olive oil\"]\n}"
+						},
+						"url": {
+							"raw": "{{shopping_service_url}}/api",
+							"host": ["{{shopping_service_url}}"],
+							"path": ["api"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Blog Service",
+			"item": [
+				{
+					"name": "Get Blog Posts",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{blog_service_url}}/api/blog?page=1&limit=10&category=meal-prep",
+							"host": ["{{blog_service_url}}"],
+							"path": ["api", "blog"],
+							"query": [
+								{ "key": "page", "value": "1" },
+								{ "key": "limit", "value": "10" },
+								{ "key": "category", "value": "meal-prep" }
+							]
+						}
+					}
+				},
+				{
+					"name": "Create Blog Post",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"10 Quick Meal Prep Ideas\",\n  \"content\": \"Here are some great meal prep ideas for busy weekdays...\",\n  \"excerpt\": \"Quick meal prep ideas for busy weekdays\",\n  \"category\": \"meal-prep\",\n  \"tags\": [\"meal-prep\", \"quick\", \"healthy\"],\n  \"published\": true\n}"
+						},
+						"url": {
+							"raw": "{{blog_service_url}}/api/blog",
+							"host": ["{{blog_service_url}}"],
+							"path": ["api", "blog"]
+						}
+					}
+				},
+				{
+					"name": "Generate Blog Post",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"topic\": \"healthy meal prep for beginners\",\n  \"category\": \"meal-prep\",\n  \"targetAudience\": \"beginners\",\n  \"keywords\": [\"meal prep\", \"healthy\", \"beginner\"]\n}"
+						},
+						"url": {
+							"raw": "{{blog_service_url}}/api/blog/generate",
+							"host": ["{{blog_service_url}}"],
+							"path": ["api", "blog", "generate"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Social Media Service",
+			"item": [
+				{
+					"name": "Health Check",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{social_service_url}}/api/health",
+							"host": ["{{social_service_url}}"],
+							"path": ["api", "health"]
+						}
+					}
+				},
+				{
+					"name": "Get Social Feed",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{social_service_url}}/api/social/feed?page=1&limit=20",
+							"host": ["{{social_service_url}}"],
+							"path": ["api", "social", "feed"],
+							"query": [
+								{ "key": "page", "value": "1" },
+								{ "key": "limit", "value": "20" }
+							]
+						}
+					}
+				},
+				{
+					"name": "Create Social Post",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"content\": \"Just made this amazing chicken stir fry!\",\n  \"recipeId\": \"recipe_id_here\",\n  \"images\": [\"image_url_1\", \"image_url_2\"],\n  \"visibility\": \"public\"\n}"
+						},
+						"url": {
+							"raw": "{{social_service_url}}/api/social/feed",
+							"host": ["{{social_service_url}}"],
+							"path": ["api", "social", "feed"]
+						}
+					}
+				},
+				{
+					"name": "Like Post",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"action\": \"like\"\n}"
+						},
+						"url": {
+							"raw": "{{social_service_url}}/api/social/posts/{{post_id}}/like",
+							"host": ["{{social_service_url}}"],
+							"path": ["api", "social", "posts", "{{post_id}}", "like"]
+						}
+					}
+				},
+				{
+					"name": "Add Comment",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"content\": \"This looks delicious! Can't wait to try it.\",\n  \"replyToId\": null\n}"
+						},
+						"url": {
+							"raw": "{{social_service_url}}/api/social/posts/{{post_id}}/comments",
+							"host": ["{{social_service_url}}"],
+							"path": ["api", "social", "posts", "{{post_id}}", "comments"]
+						}
+					}
+				},
+				{
+					"name": "Follow User",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{}"
+						},
+						"url": {
+							"raw": "{{social_service_url}}/api/users/{{user_id}}/follow",
+							"host": ["{{social_service_url}}"],
+							"path": ["api", "users", "{{user_id}}", "follow"]
+						}
+					}
+				},
+				{
+					"name": "Search Users/Content",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{social_service_url}}/api/search?q=chicken recipe&type=all&page=1&limit=20",
+							"host": ["{{social_service_url}}"],
+							"path": ["api", "search"],
+							"query": [
+								{ "key": "q", "value": "chicken recipe" },
+								{ "key": "type", "value": "all" },
+								{ "key": "page", "value": "1" },
+								{ "key": "limit", "value": "20" }
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Admin Service",
+			"item": [
+				{
+					"name": "Admin Stats",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{admin_service_url}}/api/admin/stats",
+							"host": ["{{admin_service_url}}"],
+							"path": ["api", "admin", "stats"]
+						}
+					}
+				},
+				{
+					"name": "Get All Users",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{admin_service_url}}/api/admin/users?page=1&limit=50",
+							"host": ["{{admin_service_url}}"],
+							"path": ["api", "admin", "users"],
+							"query": [
+								{ "key": "page", "value": "1" },
+								{ "key": "limit", "value": "50" }
+							]
+						}
+					}
+				},
+				{
+					"name": "Generate Recipes",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"count\": 10,\n  \"cuisineType\": \"italian\",\n  \"difficulty\": \"easy\",\n  \"dietaryRestrictions\": [\"vegetarian\"]\n}"
+						},
+						"url": {
+							"raw": "{{admin_service_url}}/api/admin/recipes/generate",
+							"host": ["{{admin_service_url}}"],
+							"path": ["api", "admin", "recipes", "generate"]
+						}
+					}
+				},
+				{
+					"name": "Recipe Generation Status",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{admin_service_url}}/api/admin/recipes/generate/status/{{job_id}}",
+							"host": ["{{admin_service_url}}"],
+							"path": [
+								"api",
+								"admin",
+								"recipes",
+								"generate",
+								"status",
+								"{{job_id}}"
+							]
+						}
+					}
+				},
+				{
+					"name": "Generate Blog Post",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"topic\": \"Summer Grilling Tips\",\n  \"category\": \"cooking-tips\",\n  \"keywords\": [\"grilling\", \"summer\", \"bbq\"]\n}"
+						},
+						"url": {
+							"raw": "{{admin_service_url}}/api/blog/generate",
+							"host": ["{{admin_service_url}}"],
+							"path": ["api", "blog", "generate"]
+						}
+					}
+				},
+				{
+					"name": "Service Health Check",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{admin_service_url}}/api/admin/services/health",
+							"host": ["{{admin_service_url}}"],
+							"path": ["api", "admin", "services", "health"]
+						}
+					}
+				}
+			]
+		}
+	]
+}

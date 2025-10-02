@@ -1,0 +1,194 @@
+# Dependabot configuration for MealPrep360
+version: 2
+updates:
+  # Frontend service
+  - package-ecosystem: "npm"
+    directory: "/services/frontend"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+    open-pull-requests-limit: 10
+    reviewers:
+      - "dev-team"
+    assignees:
+      - "frontend-team"
+    commit-message:
+      prefix: "chore(frontend)"
+      include: "scope"
+
+  # Admin service
+  - package-ecosystem: "npm"
+    directory: "/services/admin"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+    open-pull-requests-limit: 10
+    reviewers:
+      - "dev-team"
+    assignees:
+      - "admin-team"
+    commit-message:
+      prefix: "chore(admin)"
+      include: "scope"
+
+  # API Gateway service
+  - package-ecosystem: "npm"
+    directory: "/services/api-gateway"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+    open-pull-requests-limit: 10
+    reviewers:
+      - "dev-team"
+    assignees:
+      - "backend-team"
+    commit-message:
+      prefix: "chore(api-gateway)"
+      include: "scope"
+
+  # Recipe Service
+  - package-ecosystem: "npm"
+    directory: "/services/recipe-service"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+    open-pull-requests-limit: 10
+    reviewers:
+      - "dev-team"
+    assignees:
+      - "ai-team"
+    commit-message:
+      prefix: "chore(recipe-service)"
+      include: "scope"
+
+  # Meal Plan Service
+  - package-ecosystem: "npm"
+    directory: "/services/meal-plan-service"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+    open-pull-requests-limit: 10
+    reviewers:
+      - "dev-team"
+    assignees:
+      - "backend-team"
+    commit-message:
+      prefix: "chore(meal-plan-service)"
+      include: "scope"
+
+  # Shopping Service
+  - package-ecosystem: "npm"
+    directory: "/services/shopping-service"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+    open-pull-requests-limit: 10
+    reviewers:
+      - "dev-team"
+    assignees:
+      - "backend-team"
+    commit-message:
+      prefix: "chore(shopping-service)"
+      include: "scope"
+
+  # Social Service
+  - package-ecosystem: "npm"
+    directory: "/services/social-service"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+    open-pull-requests-limit: 10
+    reviewers:
+      - "dev-team"
+    assignees:
+      - "social-team"
+    commit-message:
+      prefix: "chore(social-service)"
+      include: "scope"
+
+  # Blog Service
+  - package-ecosystem: "npm"
+    directory: "/services/blog-service"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+    open-pull-requests-limit: 10
+    reviewers:
+      - "dev-team"
+    assignees:
+      - "content-team"
+    commit-message:
+      prefix: "chore(blog-service)"
+      include: "scope"
+
+  # WebSocket Server
+  - package-ecosystem: "npm"
+    directory: "/services/websocket-server"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+    open-pull-requests-limit: 10
+    reviewers:
+      - "dev-team"
+    assignees:
+      - "realtime-team"
+    commit-message:
+      prefix: "chore(websocket-server)"
+      include: "scope"
+
+  # Mobile app
+  - package-ecosystem: "npm"
+    directory: "/mobile"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+    open-pull-requests-limit: 10
+    reviewers:
+      - "dev-team"
+    assignees:
+      - "mobile-team"
+    commit-message:
+      prefix: "chore(mobile)"
+      include: "scope"
+
+  # GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+    open-pull-requests-limit: 5
+    reviewers:
+      - "devops-team"
+    assignees:
+      - "devops-team"
+    commit-message:
+      prefix: "chore(ci)"
+      include: "scope"
+
+  # Docker dependencies
+  - package-ecosystem: "docker"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+    open-pull-requests-limit: 5
+    reviewers:
+      - "devops-team"
+    assignees:
+      - "devops-team"
+    commit-message:
+      prefix: "chore(docker)"
+      include: "scope"

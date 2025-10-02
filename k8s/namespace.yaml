@@ -1,0 +1,8 @@
+# Kubernetes Namespace for MealPrep360
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: mealprep360
+  labels:
+    name: mealprep360
+    environment: production

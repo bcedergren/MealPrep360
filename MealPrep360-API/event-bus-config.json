@@ -1,0 +1,16 @@
+{
+  "type": "redis",
+  "connectionString": "redis://localhost:6379",
+  "channels": [
+    "user.created",
+    "user.updated",
+    "user.deleted",
+    "user.preferences.updated",
+    "user.subscription.changed"
+  ],
+  "retryPolicy": {
+    "maxRetries": 3,
+    "backoffMultiplier": 2,
+    "initialDelay": 1000
+  }
+}

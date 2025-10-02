@@ -1,0 +1,37 @@
+[
+	{
+		"title": "Quick Chicken Bake",
+		"description": "A simple chicken bake for busy nights.",
+		"ingredients": [
+			{ "name": "Chicken", "amount": "2", "unit": "breasts" },
+			{ "name": "Onion", "amount": "1", "unit": "medium" }
+		]
+	},
+	{
+		"title": "Beef Stew",
+		"description": "A hearty beef stew perfect for freezing.",
+		"ingredients": [
+			{ "name": "Beef", "amount": "2", "unit": "pounds" },
+			{ "name": "Potatoes", "amount": "4", "unit": "medium" },
+			{ "name": "Carrots", "amount": "3", "unit": "large" }
+		],
+		"prepInstructions": ["Chop beef into cubes", "Prepare vegetables"],
+		"prepTime": 30,
+		"cookTime": 120,
+		"servings": 6,
+		"tags": ["winter", "freezer-friendly"],
+		"storageTime": 90,
+		"containerSuggestions": ["Freezer bags", "Airtight containers"],
+		"defrostInstructions": ["Thaw in refrigerator for 24 hours"],
+		"cookingInstructions": ["Simmer until beef is tender"],
+		"servingInstructions": ["Serve hot with bread"],
+		"allergenInfo": ["None"],
+		"dietaryInfo": ["Gluten-Free"],
+		"season": "winter"
+	},
+	{
+		"title": "Incomplete Recipe",
+		"description": "A recipe missing most fields for testing.",
+		"ingredients": [{ "name": "Pork", "amount": "1.5", "unit": "pounds" }]
+	}
+]

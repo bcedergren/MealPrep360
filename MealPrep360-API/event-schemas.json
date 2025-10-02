@@ -1,0 +1,50 @@
+{
+  "user.created": {
+    "properties": {
+      "userId": {
+        "type": "string",
+        "required": true
+      },
+      "clerkId": {
+        "type": "string",
+        "required": true
+      },
+      "email": {
+        "type": "string",
+        "required": true
+      },
+      "createdAt": {
+        "type": "date",
+        "required": true
+      }
+    }
+  },
+  "user.updated": {
+    "properties": {
+      "userId": {
+        "type": "string",
+        "required": true
+      },
+      "changes": {
+        "type": "object",
+        "required": true
+      },
+      "updatedAt": {
+        "type": "date",
+        "required": true
+      }
+    }
+  },
+  "user.deleted": {
+    "properties": {
+      "userId": {
+        "type": "string",
+        "required": true
+      },
+      "deletedAt": {
+        "type": "date",
+        "required": true
+      }
+    }
+  }
+}

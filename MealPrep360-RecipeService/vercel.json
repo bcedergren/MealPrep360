@@ -1,0 +1,58 @@
+{
+	"version": 2,
+	"builds": [
+		{
+			"src": "src/api/index.ts",
+			"use": "@vercel/node",
+			"config": {
+				"includeFiles": ["src/**/*"]
+			}
+		},
+		{
+			"src": "src/api/generate.ts",
+			"use": "@vercel/node",
+			"config": {
+				"includeFiles": ["src/**/*"]
+			}
+		},
+		{
+			"src": "src/api/generate-images.ts",
+			"use": "@vercel/node",
+			"config": {
+				"includeFiles": ["src/**/*"]
+			}
+		},
+		{
+			"src": "api/cron/process-recipes.ts",
+			"use": "@vercel/node",
+			"config": {
+				"includeFiles": ["src/**/*"],
+				"maxDuration": 10
+			}
+		}
+	],
+	"routes": [
+		{
+			"src": "/api/generate",
+			"dest": "/src/api/generate.ts"
+		},
+		{
+			"src": "/api/generate-images",
+			"dest": "/src/api/generate-images.ts"
+		},
+		{
+			"src": "/api/cron/process-recipes",
+			"dest": "/api/cron/process-recipes.ts"
+		},
+		{
+			"src": "/(.*)",
+			"dest": "/src/api/index.ts"
+		}
+	],
+	"crons": [
+		{
+			"path": "/api/cron/process-recipes",
+			"schedule": "*/30 * * * *"
+		}
+	]
+}

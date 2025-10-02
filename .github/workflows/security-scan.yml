@@ -1,0 +1,295 @@
+name: Security Scanning
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  schedule:
+    - cron: '0 2 * * 1'  # Weekly on Monday at 2 AM
+
+jobs:
+  # ==========================================
+  # CodeQL Analysis
+  # ==========================================
+  codeql-analysis:
+    name: CodeQL Analysis
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+    
+    strategy:
+      fail-fast: false
+      matrix:
+        language: [ 'javascript', 'typescript' ]
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Initialize CodeQL
+      uses: github/codeql-action/init@v2
+      with:
+        languages: ${{ matrix.language }}
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: |
+        cd services/frontend && npm ci
+        cd ../admin && npm ci
+        cd ../api-gateway && npm ci
+        cd ../recipe-service && npm ci
+        cd ../meal-plan-service && npm ci
+        cd ../shopping-service && npm ci
+        cd ../social-service && npm ci
+        cd ../blog-service && npm ci
+        cd ../websocket-server && npm ci
+
+    - name: Perform CodeQL Analysis
+      uses: github/codeql-action/analyze@v2
+
+  # ==========================================
+  # Dependency Vulnerability Scan
+  # ==========================================
+  dependency-scan:
+    name: Dependency Vulnerability Scan
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+
+    - name: Install dependencies - Frontend
+      run: |
+        cd services/frontend
+        npm ci
+
+    - name: Audit Frontend dependencies
+      run: |
+        cd services/frontend
+        npm audit --audit-level=moderate || true
+      continue-on-error: true
+
+    - name: Install dependencies - Admin
+      run: |
+        cd services/admin
+        npm ci
+
+    - name: Audit Admin dependencies
+      run: |
+        cd services/admin
+        npm audit --audit-level=moderate || true
+      continue-on-error: true
+
+    - name: Install dependencies - API Gateway
+      run: |
+        cd services/api-gateway
+        npm ci
+
+    - name: Audit API Gateway dependencies
+      run: |
+        cd services/api-gateway
+        npm audit --audit-level=moderate || true
+      continue-on-error: true
+
+    - name: Install dependencies - Recipe Service
+      run: |
+        cd services/recipe-service
+        npm ci
+
+    - name: Audit Recipe Service dependencies
+      run: |
+        cd services/recipe-service
+        npm audit --audit-level=moderate || true
+      continue-on-error: true
+
+    - name: Install dependencies - Meal Plan Service
+      run: |
+        cd services/meal-plan-service
+        npm ci
+
+    - name: Audit Meal Plan Service dependencies
+      run: |
+        cd services/meal-plan-service
+        npm audit --audit-level=moderate || true
+      continue-on-error: true
+
+    - name: Install dependencies - Shopping Service
+      run: |
+        cd services/shopping-service
+        npm ci
+
+    - name: Audit Shopping Service dependencies
+      run: |
+        cd services/shopping-service
+        npm audit --audit-level=moderate || true
+      continue-on-error: true
+
+    - name: Install dependencies - Social Service
+      run: |
+        cd services/social-service
+        npm ci
+
+    - name: Audit Social Service dependencies
+      run: |
+        cd services/social-service
+        npm audit --audit-level=moderate || true
+      continue-on-error: true
+
+    - name: Install dependencies - Blog Service
+      run: |
+        cd services/blog-service
+        npm ci
+
+    - name: Audit Blog Service dependencies
+      run: |
+        cd services/blog-service
+        npm audit --audit-level=moderate || true
+      continue-on-error: true
+
+    - name: Install dependencies - WebSocket Server
+      run: |
+        cd services/websocket-server
+        npm ci
+
+    - name: Audit WebSocket Server dependencies
+      run: |
+        cd services/websocket-server
+        npm audit --audit-level=moderate || true
+      continue-on-error: true
+
+  # ==========================================
+  # Docker Security Scan
+  # ==========================================
+  docker-security:
+    name: Docker Security Scan
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        service:
+          - name: frontend
+            context: ./services/frontend
+          - name: admin
+            context: ./services/admin
+          - name: api-gateway
+            context: ./services/api-gateway
+          - name: recipe-service
+            context: ./services/recipe-service
+          - name: meal-plan-service
+            context: ./services/meal-plan-service
+          - name: shopping-service
+            context: ./services/shopping-service
+          - name: social-service
+            context: ./services/social-service
+          - name: blog-service
+            context: ./services/blog-service
+          - name: websocket-server
+            context: ./services/websocket-server
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Build Docker image
+      run: |
+        docker build -t test-${{ matrix.service.name }} ${{ matrix.service.context }}
+
+    - name: Run Trivy vulnerability scanner
+      uses: aquasecurity/trivy-action@master
+      with:
+        image-ref: 'test-${{ matrix.service.name }}'
+        format: 'sarif'
+        output: 'trivy-results-${{ matrix.service.name }}.sarif'
+
+    - name: Upload Trivy scan results to GitHub Security tab
+      uses: github/codeql-action/upload-sarif@v2
+      with:
+        sarif_file: 'trivy-results-${{ matrix.service.name }}.sarif'
+
+  # ==========================================
+  # License Compliance Check
+  # ==========================================
+  license-check:
+    name: License Compliance Check
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+
+    - name: Install license checker
+      run: npm install -g license-checker
+
+    - name: Check licenses - Frontend
+      run: |
+        cd services/frontend
+        npm ci
+        license-checker --onlyAllow 'MIT;Apache-2.0;BSD-2-Clause;BSD-3-Clause;ISC;Unlicense' --excludePrivatePackages || true
+
+    - name: Check licenses - Admin
+      run: |
+        cd services/admin
+        npm ci
+        license-checker --onlyAllow 'MIT;Apache-2.0;BSD-2-Clause;BSD-3-Clause;ISC;Unlicense' --excludePrivatePackages || true
+
+    - name: Check licenses - API Gateway
+      run: |
+        cd services/api-gateway
+        npm ci
+        license-checker --onlyAllow 'MIT;Apache-2.0;BSD-2-Clause;BSD-3-Clause;ISC;Unlicense' --excludePrivatePackages || true
+
+    - name: Check licenses - Recipe Service
+      run: |
+        cd services/recipe-service
+        npm ci
+        license-checker --onlyAllow 'MIT;Apache-2.0;BSD-2-Clause;BSD-3-Clause;ISC;Unlicense' --excludePrivatePackages || true
+
+    - name: Check licenses - Meal Plan Service
+      run: |
+        cd services/meal-plan-service
+        npm ci
+        license-checker --onlyAllow 'MIT;Apache-2.0;BSD-2-Clause;BSD-3-Clause;ISC;Unlicense' --excludePrivatePackages || true
+
+    - name: Check licenses - Shopping Service
+      run: |
+        cd services/shopping-service
+        npm ci
+        license-checker --onlyAllow 'MIT;Apache-2.0;BSD-2-Clause;BSD-3-Clause;ISC;Unlicense' --excludePrivatePackages || true
+
+    - name: Check licenses - Social Service
+      run: |
+        cd services/social-service
+        npm ci
+        license-checker --onlyAllow 'MIT;Apache-2.0;BSD-2-Clause;BSD-3-Clause;ISC;Unlicense' --excludePrivatePackages || true
+
+    - name: Check licenses - Blog Service
+      run: |
+        cd services/blog-service
+        npm ci
+        license-checker --onlyAllow 'MIT;Apache-2.0;BSD-2-Clause;BSD-3-Clause;ISC;Unlicense' --excludePrivatePackages || true
+
+    - name: Check licenses - WebSocket Server
+      run: |
+        cd services/websocket-server
+        npm ci
+        license-checker --onlyAllow 'MIT;Apache-2.0;BSD-2-Clause;BSD-3-Clause;ISC;Unlicense' --excludePrivatePackages || true

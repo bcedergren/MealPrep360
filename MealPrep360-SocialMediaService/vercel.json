@@ -1,0 +1,42 @@
+{
+	"version": 2,
+	"buildCommand": "next build --no-lint",
+	"devCommand": "next dev",
+	"installCommand": "npm install",
+	"framework": "nextjs",
+	"regions": ["iad1"],
+	"headers": [
+		{
+			"source": "/(.*)",
+			"headers": [
+				{
+					"key": "X-Content-Type-Options",
+					"value": "nosniff"
+				},
+				{
+					"key": "X-Frame-Options",
+					"value": "DENY"
+				},
+				{
+					"key": "X-XSS-Protection",
+					"value": "1; mode=block"
+				}
+			]
+		},
+		{
+			"source": "/api/(.*)",
+			"headers": [
+				{
+					"key": "Cache-Control",
+					"value": "no-store, max-age=0"
+				}
+			]
+		}
+	],
+	"crons": [
+		{
+			"path": "/api/health",
+			"schedule": "*/5 * * * *"
+		}
+	]
+}

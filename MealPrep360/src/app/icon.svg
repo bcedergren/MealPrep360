@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect x="56" y="96" width="400" height="320" rx="32" fill="#2196F3"/>
+  
+  <!-- Box lid -->
+  <path d="M56 128l400 0l-40 -64l-320 0l-40 64z" fill="#21CBF3"/>
+  
+  <!-- Recipe cards -->
+  <rect x="96" y="160" width="320" height="40" rx="8" fill="white"/>
+  <rect x="96" y="220" width="320" height="40" rx="8" fill="white"/>
+  <rect x="96" y="280" width="320" height="40" rx="8" fill="white"/>
+  
+  <!-- Small details -->
+  <circle cx="256" cy="368" r="16" fill="#21CBF3"/>
+</svg> 

@@ -1,0 +1,29 @@
+.env
+.env.local
+
+.vercel
+
+# Node modules
+node_modules/
+
+# Build output
+dist/
+build/
+coverage/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE/editor settings
+.vscode/
+.idea/
+*.swp
+
+# Ignore coverage reports
+coverage/
