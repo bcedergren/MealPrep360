@@ -1,0 +1,133 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'MealPrep360 Database Infrastructure (DocumentDB for MongoDB compatibility)'
+
+Parameters:
+  EnvironmentName:
+    Description: Environment name prefix
+    Type: String
+    Default: mealprep360
+
+  VPC:
+    Description: VPC ID
+    Type: AWS::EC2::VPC::Id
+
+  PrivateSubnets:
+    Description: Private subnet IDs
+    Type: List<AWS::EC2::Subnet::Id>
+
+  MasterUsername:
+    Description: Master username for DocumentDB
+    Type: String
+    Default: admin
+    NoEcho: true
+
+  MasterPassword:
+    Description: Master password for DocumentDB
+    Type: String
+    NoEcho: true
+    MinLength: 8
+
+Resources:
+  # DocumentDB Subnet Group
+  DBSubnetGroup:
+    Type: AWS::DocDB::DBSubnetGroup
+    Properties:
+      DBSubnetGroupDescription: Subnet group for DocumentDB
+      SubnetIds: !Ref PrivateSubnets
+      Tags:
+        - Key: Name
+          Value: !Sub ${EnvironmentName}-docdb-subnet-group
+
+  # DocumentDB Security Group
+  DBSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Security group for DocumentDB
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 27017
+          ToPort: 27017
+          SourceSecurityGroupId: !ImportValue
+            Fn::Sub: ${EnvironmentName}-ecs-sg
+      Tags:
+        - Key: Name
+          Value: !Sub ${EnvironmentName}-docdb-sg
+
+  # DocumentDB Cluster
+  DocumentDBCluster:
+    Type: AWS::DocDB::DBCluster
+    Properties:
+      DBClusterIdentifier: !Sub ${EnvironmentName}-docdb-cluster
+      MasterUsername: !Ref MasterUsername
+      MasterUserPassword: !Ref MasterPassword
+      DBSubnetGroupName: !Ref DBSubnetGroup
+      VpcSecurityGroupIds:
+        - !Ref DBSecurityGroup
+      StorageEncrypted: true
+      BackupRetentionPeriod: 7
+      PreferredBackupWindow: 03:00-04:00
+      PreferredMaintenanceWindow: sun:04:00-sun:05:00
+      Tags:
+        - Key: Name
+          Value: !Sub ${EnvironmentName}-docdb-cluster
+
+  # DocumentDB Instance
+  DocumentDBInstance:
+    Type: AWS::DocDB::DBInstance
+    Properties:
+      DBClusterIdentifier: !Ref DocumentDBCluster
+      DBInstanceClass: db.t3.medium
+      DBInstanceIdentifier: !Sub ${EnvironmentName}-docdb-instance
+      Tags:
+        - Key: Name
+          Value: !Sub ${EnvironmentName}-docdb-instance
+
+  # ElastiCache for Redis
+  RedisSubnetGroup:
+    Type: AWS::ElastiCache::SubnetGroup
+    Properties:
+      Description: Subnet group for Redis
+      SubnetIds: !Ref PrivateSubnets
+
+  RedisSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Security group for Redis
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 6379
+          ToPort: 6379
+          SourceSecurityGroupId: !ImportValue
+            Fn::Sub: ${EnvironmentName}-ecs-sg
+      Tags:
+        - Key: Name
+          Value: !Sub ${EnvironmentName}-redis-sg
+
+  RedisCluster:
+    Type: AWS::ElastiCache::CacheCluster
+    Properties:
+      CacheNodeType: cache.t3.micro
+      Engine: redis
+      NumCacheNodes: 1
+      VpcSecurityGroupIds:
+        - !Ref RedisSecurityGroup
+      CacheSubnetGroupName: !Ref RedisSubnetGroup
+      Tags:
+        - Key: Name
+          Value: !Sub ${EnvironmentName}-redis
+
+Outputs:
+  DocumentDBEndpoint:
+    Description: DocumentDB Cluster Endpoint
+    Value: !GetAtt DocumentDBCluster.Endpoint
+    Export:
+      Name: !Sub ${EnvironmentName}-docdb-endpoint
+
+  RedisEndpoint:
+    Description: Redis Cluster Endpoint
+    Value: !GetAtt RedisCluster.RedisEndpoint.Address
+    Export:
+      Name: !Sub ${EnvironmentName}-redis-endpoint
+

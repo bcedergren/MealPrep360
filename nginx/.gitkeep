@@ -1,0 +1,5 @@
+# SSL certificates will go here
+# For production, add:
+# - cert.pem
+# - key.pem
+

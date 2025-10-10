@@ -1,77 +1,59 @@
-# Multi-stage Dockerfile for MealPrep360-Admin
-# ============================================
-
-# Base image(s)
+# Multi-stage build for MealPrep360 Admin Panel
 FROM node:18-alpine AS base
 
-# Dependencies stage (use Debian to ensure Next SWC native binary works)
-FROM node:18-bullseye-slim AS deps
+# Install dependencies only when needed
+FROM base AS deps
+RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
 # Copy package files
 COPY package*.json ./
-COPY next.config.js ./
-COPY tsconfig.json ./
+RUN npm ci
 
-# Install all deps (including dev) for build
-RUN npm ci && npm cache clean --force
-
-# Build the application (on Debian for SWC compatibility)
-FROM node:18-bullseye-slim AS builder
+# Rebuild the source code only when needed
+FROM base AS builder
 WORKDIR /app
-
-# Copy dependencies
 COPY --from=deps /app/node_modules ./node_modules
-
-# Copy source code
 COPY . .
 
-# Accept and set public envs during build to satisfy runtime checks in prerender
+# Build arguments for environment variables
 ARG NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
 ARG NEXT_PUBLIC_API_URL
-ENV NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=${NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY}
-ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
+ARG SERVER_API_URL
 
-# Set production environment
-ENV NODE_ENV=production
-ENV NEXT_TELEMETRY_DISABLED=1
+# Set environment variables for build
+ENV NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=$NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
+ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+ENV SERVER_API_URL=$SERVER_API_URL
 
 # Build the application
 RUN npm run build
 
-# Production image (slim Alpine runtime)
+# Production image, copy all the files and run next
 FROM base AS runner
 WORKDIR /app
 
-# Create non-root user for security
+ENV NODE_ENV=production
+
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
-# Set production environment
-ENV NODE_ENV=production
-ENV NEXT_TELEMETRY_DISABLED=1
-
-# Copy built application
-COPY --from=builder /app/.next/standalone ./
-COPY --from=builder /app/.next/static ./.next/static
 COPY --from=builder /app/public ./public
 
-# Copy package.json for runtime dependencies
-COPY --from=builder /app/package.json ./package.json
+# Set the correct permission for prerender cache
+RUN mkdir .next
+RUN chown nextjs:nodejs .next
 
-# Install curl for healthcheck
-RUN apk add --no-cache curl
+# Automatically leverage output traces to reduce image size
+COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
-# Set proper permissions
-RUN chown -R nextjs:nodejs /app
 USER nextjs
 
-# Expose port
 EXPOSE 3008
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-  CMD curl -f http://localhost:3008 || exit 1
+ENV PORT=3008
+ENV HOSTNAME="0.0.0.0"
 
-# Start the application
 CMD ["node", "server.js"]
+

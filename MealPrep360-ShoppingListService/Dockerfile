@@ -1,7 +1,4 @@
-# Multi-stage Dockerfile for MealPrep360-ShoppingListService
-# =========================================================
-
-# Base image with Node.js 18
+# Multi-stage build for Shopping List Service
 FROM node:18-alpine AS base
 
 # Install dependencies only when needed
@@ -11,59 +8,42 @@ WORKDIR /app
 
 # Copy package files
 COPY package*.json ./
-COPY tsconfig*.json ./
+RUN npm ci
 
-# Install full dependencies (including dev) for build
-RUN npm ci && npm cache clean --force
-
-# Build the application
+# Rebuild the source code only when needed
 FROM base AS builder
 WORKDIR /app
-
-# Copy dependencies
 COPY --from=deps /app/node_modules ./node_modules
-
-# Copy source code
 COPY . .
-
-# Set production environment
-ENV NODE_ENV=production
 
 # Build the application
 RUN npm run build
 
-# Production image
+# Production image, copy all the files and run next
 FROM base AS runner
 WORKDIR /app
 
-# Create non-root user for security
+ENV NODE_ENV=production
+
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
-# Set production environment
-ENV NODE_ENV=production
+COPY --from=builder /app/public ./public
 
-# Install curl for healthcheck
-RUN apk add --no-cache curl
+# Set the correct permission for prerender cache
+RUN mkdir .next
+RUN chown nextjs:nodejs .next
 
-# Copy built application
-COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/package.json ./package.json
-COPY --from=deps /app/node_modules ./node_modules
+# Automatically leverage output traces to reduce image size
+COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
-# Prune dev dependencies to keep runtime image small
-RUN npm prune --omit=dev && npm cache clean --force
-
-# Set proper permissions
-RUN chown -R nextjs:nodejs /app
 USER nextjs
 
-# Expose port
 EXPOSE 3004
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-  CMD curl -f http://localhost:3004/health || exit 1
+ENV PORT=3004
+ENV HOSTNAME="0.0.0.0"
 
-# Start the application
-CMD ["node", "dist/index.js"]
+CMD ["node", "server.js"]
+

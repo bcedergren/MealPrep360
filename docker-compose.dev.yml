@@ -1,5 +1,6 @@
-# Docker Compose for MealPrep360 - Complete Application Stack
-# ===========================================================
+# Docker Compose for MealPrep360 - Development Environment
+# =======================================================
+# This is a simplified development version without Nginx
 
 services:
   # ==========================================
@@ -14,15 +15,15 @@ services:
       args:
         MONGODB_URI: ${MONGODB_URI}
         NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: ${NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY}
-        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
-        NEXT_PUBLIC_WS_URL: ${NEXT_PUBLIC_WS_URL}
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:3001}
+        NEXT_PUBLIC_WS_URL: ${NEXT_PUBLIC_WS_URL:-ws://localhost:3007}
     ports:
       - '3000:3000'
     environment:
-      - NODE_ENV=production
-      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
-      - NEXT_PUBLIC_WS_URL=${NEXT_PUBLIC_WS_URL}
-      - SERVER_API_URL=${SERVER_API_URL}
+      - NODE_ENV=development
+      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-http://localhost:3001}
+      - NEXT_PUBLIC_WS_URL=${NEXT_PUBLIC_WS_URL:-ws://localhost:3007}
+      - SERVER_API_URL=${SERVER_API_URL:-http://api-gateway:3001}
       - NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=${NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY}
       - CLERK_PUBLISHABLE_KEY=${NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY}
       - PORT=3000
@@ -32,18 +33,6 @@ services:
       - api-gateway
       - websocket-server
     restart: unless-stopped
-    healthcheck:
-      test:
-        [
-          'CMD',
-          'node',
-          '-e',
-          "const h=require('os').hostname();require('net').connect(3000,h).on('connect',()=>process.exit(0)).on('error',()=>process.exit(1))",
-        ]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 15s
     networks:
       - mealprep360-network
 
@@ -54,14 +43,14 @@ services:
       dockerfile: Dockerfile
       args:
         NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: ${NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY}
-        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
-        SERVER_API_URL: ${SERVER_API_URL}
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:3001}
+        SERVER_API_URL: ${SERVER_API_URL:-http://api-gateway:3001}
     ports:
       - '3008:3008'
     environment:
-      - NODE_ENV=production
-      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
-      - SERVER_API_URL=${SERVER_API_URL}
+      - NODE_ENV=development
+      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-http://localhost:3001}
+      - SERVER_API_URL=${SERVER_API_URL:-http://api-gateway:3001}
       - NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=${NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY}
       - CLERK_PUBLISHABLE_KEY=${NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY}
       - PORT=3008
@@ -70,18 +59,6 @@ services:
     depends_on:
       - api-gateway
     restart: unless-stopped
-    healthcheck:
-      test:
-        [
-          'CMD',
-          'node',
-          '-e',
-          "const h=require('os').hostname();require('net').connect(3008,h).on('connect',()=>process.exit(0)).on('error',()=>process.exit(1))",
-        ]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 15s
     networks:
       - mealprep360-network
 
@@ -96,18 +73,16 @@ services:
     ports:
       - '3001:3001'
     environment:
-      - NODE_ENV=production
-      - MONGODB_URI=mongodb://${MONGO_ROOT_USERNAME}:${MONGO_ROOT_PASSWORD}@mongodb:27017/mealprep360_prod?authSource=admin
+      - NODE_ENV=development
+      - MONGODB_URI=mongodb://${MONGO_ROOT_USERNAME}:${MONGO_ROOT_PASSWORD}@mongodb:27017/mealprep360_dev?authSource=admin
       - REDIS_URL=redis://redis:6379
       - PORT=3001
-      # Downstream service URLs (internal Docker DNS names)
       - RECIPE_SERVICE_URL=http://recipe-service:3002
       - MEALPLAN_SERVICE_URL=http://mealplan-service:3003
       - SHOPPING_SERVICE_URL=http://shopping-service:3004
       - SOCIAL_SERVICE_URL=http://social-service:3005
       - BLOG_SERVICE_URL=http://blog-service:3006
       - WEBSOCKET_SERVICE_URL=http://websocket-server:3007
-      # API keys for downstream services (used for X-API-Key headers)
       - RECIPE_SERVICE_API_KEY=${RECIPE_SERVICE_API_KEY}
       - MEALPLAN_SERVICE_API_KEY=${MEALPLAN_SERVICE_API_KEY}
       - SHOPPING_SERVICE_API_KEY=${SHOPPING_SERVICE_API_KEY}
@@ -125,26 +100,16 @@ services:
       - social-service
       - blog-service
     restart: unless-stopped
-    healthcheck:
-      test:
-        [
-          'CMD',
-          'node',
-          '-e',
-          "const h=require('os').hostname();require('http').get('http://'+h+':3001/api/health',r=>process.exit(r.statusCode===200?0:1)).on('error',()=>process.exit(1))",
-        ]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 10s
     networks:
       - mealprep360-network
+    volumes:
+      - ./MealPrep360-API:/app
+      - /app/node_modules
 
   # ==========================================
   # Microservices
   # ==========================================
 
-  # Recipe Service
   recipe-service:
     build:
       context: ./MealPrep360-RecipeService
@@ -152,8 +117,8 @@ services:
     ports:
       - '3002:3002'
     environment:
-      - NODE_ENV=production
-      - MONGODB_URI=mongodb://${MONGO_ROOT_USERNAME}:${MONGO_ROOT_PASSWORD}@mongodb:27017/mealprep360_prod?authSource=admin
+      - NODE_ENV=development
+      - MONGODB_URI=mongodb://${MONGO_ROOT_USERNAME}:${MONGO_ROOT_PASSWORD}@mongodb:27017/mealprep360_dev?authSource=admin
       - REDIS_URL=redis://redis:6379
       - API_KEY=${RECIPE_SERVICE_API_KEY}
       - PORT=3002
@@ -162,15 +127,12 @@ services:
     depends_on:
       - mongodb
     restart: unless-stopped
-    healthcheck:
-      test: ['CMD', 'curl', '-f', 'http://127.0.0.1:3002/health']
-      interval: 30s
-      timeout: 10s
-      retries: 3
     networks:
       - mealprep360-network
+    volumes:
+      - ./MealPrep360-RecipeService:/app
+      - /app/node_modules
 
-  # Meal Plan Service
   mealplan-service:
     build:
       context: ./MealPrep360-MealPlanService
@@ -178,10 +140,9 @@ services:
     ports:
       - '3003:3003'
     environment:
-      - NODE_ENV=production
-      - MONGODB_URI=mongodb://${MONGO_ROOT_USERNAME}:${MONGO_ROOT_PASSWORD}@mongodb:27017/mealprep360_prod?authSource=admin
+      - NODE_ENV=development
+      - MONGODB_URI=mongodb://${MONGO_ROOT_USERNAME}:${MONGO_ROOT_PASSWORD}@mongodb:27017/mealprep360_dev?authSource=admin
       - API_KEY=${MEALPLAN_SERVICE_API_KEY}
-      # Expose API_TOKEN used by the service's /api/health auth check
       - API_TOKEN=${MEALPLAN_SERVICE_API_KEY}
       - PORT=3003
     env_file:
@@ -189,22 +150,12 @@ services:
     depends_on:
       - mongodb
     restart: unless-stopped
-    healthcheck:
-      test:
-        [
-          'CMD',
-          'node',
-          '-e',
-          "const h=require('os').hostname();require('http').get({hostname:h,port:3003,path:'/api/health',headers:{Authorization:'Bearer '+(process.env.API_TOKEN||'')}},r=>process.exit(r.statusCode===200?0:1)).on('error',()=>process.exit(1))",
-        ]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 10s
     networks:
       - mealprep360-network
+    volumes:
+      - ./MealPrep360-MealPlanService:/app
+      - /app/node_modules
 
-  # Shopping List Service
   shopping-service:
     build:
       context: ./MealPrep360-ShoppingListService
@@ -212,8 +163,8 @@ services:
     ports:
       - '3004:3004'
     environment:
-      - NODE_ENV=production
-      - MONGODB_URI=mongodb://${MONGO_ROOT_USERNAME}:${MONGO_ROOT_PASSWORD}@mongodb:27017/mealprep360_prod?authSource=admin
+      - NODE_ENV=development
+      - MONGODB_URI=mongodb://${MONGO_ROOT_USERNAME}:${MONGO_ROOT_PASSWORD}@mongodb:27017/mealprep360_dev?authSource=admin
       - API_KEY=${SHOPPING_SERVICE_API_KEY}
       - PORT=3004
     env_file:
@@ -221,27 +172,23 @@ services:
     depends_on:
       - mongodb
     restart: unless-stopped
-    healthcheck:
-      test: ['CMD', 'curl', '-f', 'http://127.0.0.1:3004/health']
-      interval: 30s
-      timeout: 10s
-      retries: 3
     networks:
       - mealprep360-network
+    volumes:
+      - ./MealPrep360-ShoppingListService:/app
+      - /app/node_modules
 
-  # Social Media Service
   social-service:
     build:
       context: ./MealPrep360-SocialMediaService
       dockerfile: Dockerfile
       args:
-        # Build-time database URI for compiling API routes
-        MONGODB_URI: 'mongodb://mongodb:27017/mealprep360_prod'
+        MONGODB_URI: 'mongodb://mongodb:27017/mealprep360_dev'
     ports:
       - '3005:3005'
     environment:
-      - NODE_ENV=production
-      - MONGODB_URI=mongodb://${MONGO_ROOT_USERNAME}:${MONGO_ROOT_PASSWORD}@mongodb:27017/mealprep360_prod?authSource=admin
+      - NODE_ENV=development
+      - MONGODB_URI=mongodb://${MONGO_ROOT_USERNAME}:${MONGO_ROOT_PASSWORD}@mongodb:27017/mealprep360_dev?authSource=admin
       - API_KEY=${SOCIAL_SERVICE_API_KEY}
       - PORT=3005
     env_file:
@@ -249,22 +196,12 @@ services:
     depends_on:
       - mongodb
     restart: unless-stopped
-    healthcheck:
-      test:
-        [
-          'CMD',
-          'node',
-          '-e',
-          "const h=require('os').hostname();require('net').connect(3005,h).on('connect',()=>process.exit(0)).on('error',()=>process.exit(1))",
-        ]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 15s
     networks:
       - mealprep360-network
+    volumes:
+      - ./MealPrep360-SocialMediaService:/app
+      - /app/node_modules
 
-  # Blog Service
   blog-service:
     build:
       context: ./MealPrep360-BlogService
@@ -272,8 +209,8 @@ services:
     ports:
       - '3006:3006'
     environment:
-      - NODE_ENV=production
-      - MONGODB_URI=mongodb://${MONGO_ROOT_USERNAME}:${MONGO_ROOT_PASSWORD}@mongodb:27017/mealprep360_prod?authSource=admin
+      - NODE_ENV=development
+      - MONGODB_URI=mongodb://${MONGO_ROOT_USERNAME}:${MONGO_ROOT_PASSWORD}@mongodb:27017/mealprep360_dev?authSource=admin
       - API_KEY=${BLOG_SERVICE_API_KEY}
       - PORT=3006
     env_file:
@@ -281,22 +218,12 @@ services:
     depends_on:
       - mongodb
     restart: unless-stopped
-    healthcheck:
-      test:
-        [
-          'CMD',
-          'node',
-          '-e',
-          "const h=require('os').hostname();require('net').connect(3006,h).on('connect',()=>process.exit(0)).on('error',()=>process.exit(1))",
-        ]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 15s
     networks:
       - mealprep360-network
+    volumes:
+      - ./MealPrep360-BlogService:/app
+      - /app/node_modules
 
-  # WebSocket Server
   websocket-server:
     build:
       context: ./MealPrep360-WebsocketServer
@@ -304,8 +231,8 @@ services:
     ports:
       - '3007:3007'
     environment:
-      - NODE_ENV=production
-      - MONGODB_URI=mongodb://${MONGO_ROOT_USERNAME}:${MONGO_ROOT_PASSWORD}@mongodb:27017/mealprep360_prod?authSource=admin
+      - NODE_ENV=development
+      - MONGODB_URI=mongodb://${MONGO_ROOT_USERNAME}:${MONGO_ROOT_PASSWORD}@mongodb:27017/mealprep360_dev?authSource=admin
       - REDIS_URL=redis://redis:6379
       - WEBSOCKET_API_KEY=${WEBSOCKET_SERVICE_API_KEY}
       - JWT_SECRET=${JWT_SECRET}
@@ -316,19 +243,16 @@ services:
       - mongodb
       - redis
     restart: unless-stopped
-    healthcheck:
-      test: ['CMD', 'curl', '-f', 'http://127.0.0.1:3007/health']
-      interval: 30s
-      timeout: 10s
-      retries: 3
     networks:
       - mealprep360-network
+    volumes:
+      - ./MealPrep360-WebsocketServer:/app
+      - /app/node_modules
 
   # ==========================================
   # Data Layer
   # ==========================================
 
-  # MongoDB Database
   mongodb:
     image: mongo:6.0
     ports:
@@ -336,16 +260,13 @@ services:
     environment:
       - MONGO_INITDB_ROOT_USERNAME=${MONGO_ROOT_USERNAME}
       - MONGO_INITDB_ROOT_PASSWORD=${MONGO_ROOT_PASSWORD}
-      - MONGO_INITDB_DATABASE=mealprep360_prod
+      - MONGO_INITDB_DATABASE=mealprep360_dev
     volumes:
       - mongodb_data:/data/db
-      # Uncomment if you add an init script file at the root (currently a folder exists)
-      # - ./mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
     restart: unless-stopped
     networks:
       - mealprep360-network
 
-  # Redis Cache
   redis:
     image: redis:7-alpine
     ports:
@@ -356,38 +277,16 @@ services:
     networks:
       - mealprep360-network
 
-  # ==========================================
-  # Load Balancer & Reverse Proxy
-  # ==========================================
-
-  # Nginx Load Balancer
-  # nginx service temporarily disabled until config files are added
-
-  # ==========================================
-  # Monitoring & Observability
-  # ==========================================
-
-  # Prometheus (Metrics Collection)
-  # prometheus service temporarily disabled until config files are added
-
-  # Grafana (Metrics Visualization)
-  # grafana service temporarily disabled until config files are added
-
-# ==========================================
-# Volumes
-# ==========================================
 volumes:
   mongodb_data:
     driver: local
   redis_data:
     driver: local
 
-# ==========================================
-# Networks
-# ==========================================
 networks:
   mealprep360-network:
     driver: bridge
     ipam:
       config:
         - subnet: 172.20.0.0/16
+

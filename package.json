@@ -1,0 +1,66 @@
+{
+  "name": "mealprep360",
+  "version": "1.0.0",
+  "description": "A comprehensive microservices-based meal planning application with AI-powered recipe generation, meal planning, shopping lists, and social features.",
+  "main": "mongo-init.js",
+  "private": true,
+  "workspaces": [
+    "MealPrep360",
+    "MealPrep360-API",
+    "MealPrep360-Admin",
+    "MealPrep360-RecipeService",
+    "MealPrep360-MealPlanService",
+    "MealPrep360-ShoppingListService",
+    "MealPrep360-SocialMediaService",
+    "MealPrep360-BlogService",
+    "MealPrep360-WebsocketServer"
+  ],
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "start": "node index.js",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "install:all": "npm install",
+    "dev:frontend": "npm run dev --workspace=MealPrep360",
+    "dev:admin": "npm run dev --workspace=MealPrep360-Admin",
+    "dev:api": "npm run dev --workspace=MealPrep360-API",
+    "dev:recipe": "npm run dev --workspace=MealPrep360-RecipeService",
+    "dev:mealplan": "npm run dev --workspace=MealPrep360-MealPlanService",
+    "dev:shopping": "npm run dev --workspace=MealPrep360-ShoppingListService",
+    "dev:social": "npm run dev --workspace=MealPrep360-SocialMediaService",
+    "dev:blog": "npm run dev --workspace=MealPrep360-BlogService",
+    "dev:websocket": "npm run dev --workspace=MealPrep360-WebsocketServer",
+    "build:all": "npm run build --workspaces --if-present",
+    "build:frontend": "npm run build --workspace=MealPrep360",
+    "build:admin": "npm run build --workspace=MealPrep360-Admin",
+    "build:api": "npm run build --workspace=MealPrep360-API",
+    "build:recipe": "npm run build --workspace=MealPrep360-RecipeService",
+    "build:mealplan": "npm run build --workspace=MealPrep360-MealPlanService",
+    "build:shopping": "npm run build --workspace=MealPrep360-ShoppingListService",
+    "build:social": "npm run build --workspace=MealPrep360-SocialMediaService",
+    "build:blog": "npm run build --workspace=MealPrep360-BlogService",
+    "test:all": "npm run test --workspaces --if-present",
+    "lint:all": "npm run lint --workspaces --if-present",
+    "clean": "npm run clean --workspaces --if-present && rm -rf node_modules",
+    "docker:up": "docker compose up -d",
+    "docker:down": "docker compose down",
+    "docker:logs": "docker compose logs -f",
+    "docker:rebuild": "docker compose up -d --build",
+    "docker:restart": "docker compose restart"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bcedergren/MealPrep360.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/bcedergren/MealPrep360/issues"
+  },
+  "homepage": "https://github.com/bcedergren/MealPrep360#readme",
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}

@@ -1,0 +1,129 @@
+name: Deploy to Staging
+
+on:
+  push:
+    branches: [develop]
+  workflow_dispatch:
+    inputs:
+      service:
+        description: 'Service to deploy (all, frontend, api-gateway, etc.)'
+        required: false
+        default: 'all'
+
+env:
+  AWS_REGION: us-east-1
+  ECR_REGISTRY: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com
+  ECS_CLUSTER: mealprep360-staging-cluster
+  ENVIRONMENT: staging
+
+jobs:
+  build-and-deploy:
+    name: Build and Deploy to Staging
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    strategy:
+      matrix:
+        service:
+          - name: frontend
+            context: ./MealPrep360
+            port: 3000
+          - name: admin
+            context: ./MealPrep360-Admin
+            port: 3008
+          - name: api-gateway
+            context: ./MealPrep360-API
+            port: 3001
+          - name: recipe-service
+            context: ./MealPrep360-RecipeService
+            port: 3002
+          - name: mealplan-service
+            context: ./MealPrep360-MealPlanService
+            port: 3003
+          - name: shopping-service
+            context: ./MealPrep360-ShoppingListService
+            port: 3004
+          - name: social-service
+            context: ./MealPrep360-SocialMediaService
+            port: 3005
+          - name: blog-service
+            context: ./MealPrep360-BlogService
+            port: 3006
+          - name: websocket-server
+            context: ./MealPrep360-WebsocketServer
+            port: 3007
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Extract metadata for Docker
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.ECR_REGISTRY }}/mealprep360/${{ matrix.service.name }}
+          tags: |
+            type=ref,event=branch
+            type=sha,prefix={{branch}}-
+            type=raw,value=staging-latest
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: ${{ matrix.service.context }}
+          file: ${{ matrix.service.context }}/Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: |
+            NODE_ENV=staging
+
+      - name: Update ECS service
+        run: |
+          aws ecs update-service \
+            --cluster ${{ env.ECS_CLUSTER }} \
+            --service ${{ matrix.service.name }} \
+            --force-new-deployment \
+            --region ${{ env.AWS_REGION }}
+
+      - name: Wait for service stability
+        run: |
+          aws ecs wait services-stable \
+            --cluster ${{ env.ECS_CLUSTER }} \
+            --services ${{ matrix.service.name }} \
+            --region ${{ env.AWS_REGION }}
+
+  notify:
+    name: Notify Deployment Status
+    runs-on: ubuntu-latest
+    needs: [build-and-deploy]
+    if: always()
+    steps:
+      - name: Notify success
+        if: ${{ needs.build-and-deploy.result == 'success' }}
+        run: |
+          echo "✅ Staging deployment successful"
+          # Add Slack/Discord notification here if needed
+
+      - name: Notify failure
+        if: ${{ needs.build-and-deploy.result == 'failure' }}
+        run: |
+          echo "❌ Staging deployment failed"
+          exit 1
+
