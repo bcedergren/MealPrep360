@@ -1,0 +1,91 @@
+Project,External ID,Parent External ID,Issue Type,Summary,Description,Priority,Labels,Epic Link,Components,Story Points,Assignee,Acceptance Criteria,Sprint,Due Date
+MP360,EPIC-WEB,,Epic,"[EPIC] Web App (Batch Day, Labels, Freezer)","Parent epic: [EPIC] Web App (Batch Day, Labels, Freezer)",Highest,epic,,platform,,,,"Sprint 1 (Oct 13–Oct 26, 2025)",2025-10-26
+MP360,EPIC-MOB,,Epic,"[EPIC] Mobile App (Scanner, Freezer, Notifications)","Parent epic: [EPIC] Mobile App (Scanner, Freezer, Notifications)",Highest,epic,,platform,,,,"Sprint 1 (Oct 13–Oct 26, 2025)",2025-10-26
+MP360,EPIC-OPT,,Epic,[EPIC] Pack-Size Cart Optimizer,Parent epic: [EPIC] Pack-Size Cart Optimizer,Highest,epic,,platform,,,,"Sprint 1 (Oct 13–Oct 26, 2025)",2025-10-26
+MP360,EPIC-QR,,Epic,[EPIC] QR Labels & Scanning,Parent epic: [EPIC] QR Labels & Scanning,Highest,epic,,platform,,,,"Sprint 1 (Oct 13–Oct 26, 2025)",2025-10-26
+MP360,EPIC-THAW,,Epic,[EPIC] Thaw Scheduler & Notifications,Parent epic: [EPIC] Thaw Scheduler & Notifications,Highest,epic,,platform,,,,"Sprint 1 (Oct 13–Oct 26, 2025)",2025-10-26
+MP360,EPIC-PAN,,Epic,[EPIC] Pantry Check & Smart List,Parent epic: [EPIC] Pantry Check & Smart List,Highest,epic,,platform,,,,"Sprint 1 (Oct 13–Oct 26, 2025)",2025-10-26
+MP360,EPIC-DATA,,Epic,[EPIC] DB Migrations & Seed,Parent epic: [EPIC] DB Migrations & Seed,Highest,epic,,platform,,,,"Sprint 2 (Oct 27–Nov 09, 2025)",2025-11-09
+MP360,EPIC-INF,,Epic,[EPIC] AWS Infra & Hardening,Parent epic: [EPIC] AWS Infra & Hardening,Highest,epic,,platform,,,,"Sprint 2 (Oct 27–Nov 09, 2025)",2025-11-09
+MP360,EPIC-OBS,,Epic,[EPIC] Observability & Alarms,Parent epic: [EPIC] Observability & Alarms,Highest,epic,,platform,,,,"Sprint 2 (Oct 27–Nov 09, 2025)",2025-11-09
+MP360,EPIC-SEC,,Epic,[EPIC] Security & Compliance,Parent epic: [EPIC] Security & Compliance,Highest,epic,,platform,,,,"Sprint 2 (Oct 27–Nov 09, 2025)",2025-11-09
+MP360,EPIC-ANL,,Epic,[EPIC] Analytics & KPIs,Parent epic: [EPIC] Analytics & KPIs,Highest,epic,,platform,,,,"Sprint 2 (Oct 27–Nov 09, 2025)",2025-11-09
+MP360,EPIC-CI,,Epic,[EPIC] CI/CD & Environments,Parent epic: [EPIC] CI/CD & Environments,Highest,epic,,platform,,,,"Sprint 2 (Oct 27–Nov 09, 2025)",2025-11-09
+MP360,WEB-001,,Story,Batch Day wizard (Web) — plan → optimize → labels,Implement 3-step wizard on web.,High,frontend batchday,EPIC-WEB,web,5,,"- Steps: targets → summary → optimize/print
+- Errors handled
+- State stored across refresh","Sprint 1 (Oct 13–Oct 26, 2025)",2025-10-26
+MP360,WEB-001-a,WEB-001,Sub-task,UI: targets form + validation,UI: targets form + validation,High,frontend ui,,web,2,,,"Sprint 1 (Oct 13–Oct 26, 2025)",2025-10-26
+MP360,WEB-001-b,WEB-001,Sub-task,Integrate /v1/cart/optimize,Integrate /v1/cart/optimize,High,api frontend,,web,3,,,"Sprint 1 (Oct 13–Oct 26, 2025)",2025-10-26
+MP360,WEB-001-c,WEB-001,Sub-task,Labels step: call /v1/labels/print,Labels step: call /v1/labels/print,High,labels,,web,2,,,"Sprint 1 (Oct 13–Oct 26, 2025)",2025-10-26
+MP360,WEB-001-ut,WEB-001,Sub-task,Unit tests (components & service calls),Unit tests (components & service calls),High,tests,,web,2,,,"Sprint 1 (Oct 13–Oct 26, 2025)",2025-10-26
+MP360,WEB-001-a11y,WEB-001,Sub-task,Accessibility pass (WCAG AA),Accessibility pass (WCAG AA),High,accessibility,,web,2,,,"Sprint 1 (Oct 13–Oct 26, 2025)",2025-10-26
+MP360,WEB-001-copy,WEB-001,Sub-task,Copy polish for wizard screens,Copy polish for wizard screens,High,copy,,web,1,,,"Sprint 1 (Oct 13–Oct 26, 2025)",2025-10-26
+MP360,WEB-001-tele,WEB-001,Sub-task,Telemetry: step events,Telemetry: step events,High,analytics,,web,2,,,"Sprint 1 (Oct 13–Oct 26, 2025)",2025-10-26
+MP360,WEB-001-qa,WEB-001,Sub-task,QA checklist & cross-browser,QA checklist & cross-browser,High,qa,,web,2,,,"Sprint 1 (Oct 13–Oct 26, 2025)",2025-10-26
+MP360,WEB-001-doc,WEB-001,Sub-task,User doc: Batch Day guide,User doc: Batch Day guide,High,docs,,web,1,,,"Sprint 1 (Oct 13–Oct 26, 2025)",2025-10-26
+MP360,WEB-002,,Story,"Freezer view (Web) — list, filters, quick actions",Grid/list of MealUnits with filters by state/location and quick actions.,High,freezer frontend,EPIC-WEB,web,5,,"- Filter by state/location
+- Quick actions thaw/consume/discard
+- Badge for consume_by","Sprint 2 (Oct 27–Nov 09, 2025)",2025-11-09
+MP360,WEB-002-ui,WEB-002,Sub-task,Freezer list UI + virtualization,Freezer list UI + virtualization,High,frontend,,web,3,,,"Sprint 2 (Oct 27–Nov 09, 2025)",2025-11-09
+MP360,WEB-002-actions,WEB-002,Sub-task,Quick actions + optimistic updates,Quick actions + optimistic updates,High,frontend,,web,2,,,"Sprint 2 (Oct 27–Nov 09, 2025)",2025-11-09
+MP360,WEB-002-a11y,WEB-002,Sub-task,A11y for list & actions,A11y for list & actions,High,accessibility,,web,1,,,"Sprint 2 (Oct 27–Nov 09, 2025)",2025-11-09
+MP360,WEB-002-ut,WEB-002,Sub-task,Unit tests for reducers/hooks,Unit tests for reducers/hooks,High,tests,,web,2,,,"Sprint 2 (Oct 27–Nov 09, 2025)",2025-11-09
+MP360,WEB-002-copy,WEB-002,Sub-task,Copy & empty states,Copy & empty states,High,copy,,web,1,,,"Sprint 2 (Oct 27–Nov 09, 2025)",2025-11-09
+MP360,WEB-003,,Story,Scan page (Web PWA) with camera + QR decode,Web-based scanner using BarcodeDetector; offline queue with idempotency.,High,scanner pwa,EPIC-QR,web,5,,"- Works iOS/Android
+- Offline queue → retries
+- Posts to /v1/scan","Sprint 2 (Oct 27–Nov 09, 2025)",2025-11-09
+MP360,WEB-003-det,WEB-003,Sub-task,BarcodeDetector + fallback,BarcodeDetector + fallback,High,scanner,,web,2,,,"Sprint 2 (Oct 27–Nov 09, 2025)",2025-11-09
+MP360,WEB-003-off,WEB-003,Sub-task,Offline queue & Idempotency-Key,Offline queue & Idempotency-Key,High,pwa,,web,3,,,"Sprint 2 (Oct 27–Nov 09, 2025)",2025-11-09
+MP360,WEB-003-ut,WEB-003,Sub-task,Unit tests for scanner,Unit tests for scanner,High,tests,,web,2,,,"Sprint 2 (Oct 27–Nov 09, 2025)",2025-11-09
+MP360,WEB-003-a11y,WEB-003,Sub-task,A11y for camera controls,A11y for camera controls,High,accessibility,,web,1,,,"Sprint 2 (Oct 27–Nov 09, 2025)",2025-11-09
+MP360,WEB-003-copy,WEB-003,Sub-task,Copy for scan success/error toasts,Copy for scan success/error toasts,High,copy,,web,1,,,"Sprint 2 (Oct 27–Nov 09, 2025)",2025-11-09
+MP360,WEB-003-qa,WEB-003,Sub-task,QA: device matrix,QA: device matrix,High,qa,,web,1,,,"Sprint 2 (Oct 27–Nov 09, 2025)",2025-11-09
+MP360,WEB-004,,Story,Notifications permission + token registration (Web),Collect browser push token; send to backend.,High,push,EPIC-THAW,web,3,,,"Sprint 3 (Nov 10–Nov 23, 2025)",2025-11-23
+MP360,WEB-004-ut,WEB-004,Sub-task,Unit tests for permission flows,Permission states + failures.,High,tests,,web,1,,,"Sprint 3 (Nov 10–Nov 23, 2025)",2025-11-23
+MP360,WEB-004-copy,WEB-004,Sub-task,Copy for permission prompt,"Explain value, timing, dismiss.",High,copy,,web,1,,,"Sprint 3 (Nov 10–Nov 23, 2025)",2025-11-23
+MP360,WEB-005,,Story,Nav + landing copy refresh (Web),"Add routes to nav; update hero with prep-to-freezer, QR labels, thaw reminders.",High,marketing,EPIC-WEB,web,2,,,"Sprint 1 (Oct 13–Oct 26, 2025)",2025-10-26
+MP360,WEB-005-a11y,WEB-005,Sub-task,A11y: nav landmarks/roles,Screen-reader friendly nav.,High,accessibility,,web,1,,,"Sprint 1 (Oct 13–Oct 26, 2025)",2025-10-26
+MP360,MOB-001,,Story,Scanner (Mobile) — QR scan to /v1/scan,Native scanner page; quick action selector.,High,scanner mobile,EPIC-MOB,mobile,5,,"- Fast scanning
+- Haptics
+- Retry on network error","Sprint 1 (Oct 13–Oct 26, 2025)",2025-10-26
+MP360,MOB-001-cam,MOB-001,Sub-task,Camera & QR decoding module,Camera & QR decoding module,High,scanner,,mobile,2,,,"Sprint 1 (Oct 13–Oct 26, 2025)",2025-10-26
+MP360,MOB-001-ui,MOB-001,Sub-task,Action picker + POST /v1/scan,Action picker + POST /v1/scan,High,scanner,,mobile,2,,,"Sprint 1 (Oct 13–Oct 26, 2025)",2025-10-26
+MP360,MOB-001-off,MOB-001,Sub-task,Offline queue + exponential backoff,Offline queue + exponential backoff,High,offline,,mobile,3,,,"Sprint 1 (Oct 13–Oct 26, 2025)",2025-10-26
+MP360,MOB-001-ut,MOB-001,Sub-task,Unit tests,Unit tests,High,tests,,mobile,2,,,"Sprint 1 (Oct 13–Oct 26, 2025)",2025-10-26
+MP360,MOB-001-a11y,MOB-001,Sub-task,A11y: large touch targets/labels,A11y: large touch targets/labels,High,accessibility,,mobile,1,,,"Sprint 1 (Oct 13–Oct 26, 2025)",2025-10-26
+MP360,MOB-001-copy,MOB-001,Sub-task,Copy: success/error toasts,Copy: success/error toasts,High,copy,,mobile,1,,,"Sprint 1 (Oct 13–Oct 26, 2025)",2025-10-26
+MP360,MOB-002,,Story,Freezer (Mobile) — list + detail,Mobile screens for freezer list and item detail.,High,freezer,EPIC-MOB,mobile,5,,,"Sprint 2 (Oct 27–Nov 09, 2025)",2025-11-09
+MP360,MOB-002-ui,MOB-002,Sub-task,List + detail UI,Optimized for small screens.,High,frontend,,mobile,2,,,"Sprint 2 (Oct 27–Nov 09, 2025)",2025-11-09
+MP360,MOB-002-qa,MOB-002,Sub-task,QA: device lab,Popular Android/iOS devices.,High,qa,,mobile,1,,,"Sprint 2 (Oct 27–Nov 09, 2025)",2025-11-09
+MP360,MOB-003,,Story,Push notifications (Mobile),"Register device, handle thaw reminders, deep-link to item.",High,push,EPIC-THAW,mobile,3,,,"Sprint 3 (Nov 10–Nov 23, 2025)",2025-11-23
+MP360,MOB-003-ut,MOB-003,Sub-task,Unit tests for push handlers,Foreground/background handling.,High,tests,,mobile,1,,,"Sprint 3 (Nov 10–Nov 23, 2025)",2025-11-23
+MP360,API-OPT-001,,Story,POST /v1/cart/optimize — greedy+repair + max_stores,Implement optimizer with substitution clusters and leftovers target.,High,optimizer,EPIC-OPT,api,8,,"- Returns cart <= max_stores
+- Leftovers <=15% on seed","Sprint 1 (Oct 13–Oct 26, 2025)",2025-10-26
+MP360,API-OPT-001-ut,API-OPT-001,Sub-task,Unit tests for optimizer,"Greedy, repair, store cap.",High,tests,,api,3,,,"Sprint 1 (Oct 13–Oct 26, 2025)",2025-10-26
+MP360,API-OPT-001-tele,API-OPT-001,Sub-task,Telemetry: timings & outcomes,"Track runtime, retailers, leftover%.",High,analytics,,api,1,,,"Sprint 1 (Oct 13–Oct 26, 2025)",2025-10-26
+MP360,API-QR-001,,Story,POST /v1/labels/print — Avery 5160 PDF to S3,Generate QR labels PDF; return presigned URL.,High,labels pdf,EPIC-QR,api lambda,5,,,"Sprint 1 (Oct 13–Oct 26, 2025)",2025-10-26
+MP360,API-QR-001-code,API-QR-001,Sub-task,Label code generator + uniqueness index,Short code with collision check.,High,labels,,api db,2,,,"Sprint 1 (Oct 13–Oct 26, 2025)",2025-10-26
+MP360,API-QR-001-ut,API-QR-001,Sub-task,Unit tests for PDF layout,PDF content and QR scannability.,High,tests,,api,2,,,"Sprint 1 (Oct 13–Oct 26, 2025)",2025-10-26
+MP360,API-QR-002,,Story,POST /v1/scan — state transitions,Validate and advance MealUnit states; emit events.,High,freezer,EPIC-QR,api,5,,,"Sprint 2 (Oct 27–Nov 09, 2025)",2025-11-09
+MP360,API-QR-002-idem,API-QR-002,Sub-task,Idempotency middleware (Redis),Protect mutating endpoints.,High,idempotency,,api,3,,,"Sprint 2 (Oct 27–Nov 09, 2025)",2025-11-09
+MP360,API-QR-002-ut,API-QR-002,Sub-task,Unit tests for transitions,Legal/illegal paths.,High,tests,,api,2,,,"Sprint 2 (Oct 27–Nov 09, 2025)",2025-11-09
+MP360,API-THAW-001,,Story,Thaw scheduler — EventBridge→Lambda→SNS,Compute consume_by windows and send push tasks.,High,thaw sns,EPIC-THAW,lambda api,5,,,"Sprint 2 (Oct 27–Nov 09, 2025)",2025-11-09
+MP360,API-THAW-001-ut,API-THAW-001,Sub-task,Unit tests for windows,Protein-aware windows.,High,tests,,api,2,,,"Sprint 2 (Oct 27–Nov 09, 2025)",2025-11-09
+MP360,API-PAN-001,,Story,POST /v1/pantry/check — reconcile on-hand,Subtract pantry from demand; normalize units.,High,pantry,EPIC-PAN,api,3,,,"Sprint 3 (Nov 10–Nov 23, 2025)",2025-11-23
+MP360,API-PAN-001-ut,API-PAN-001,Sub-task,Unit tests for normalization,Conversions and rounding.,High,tests,,api,2,,,"Sprint 3 (Nov 10–Nov 23, 2025)",2025-11-23
+MP360,DATA-001,,Story,DB migrations: core tables + indexes,"Create Ingredient, Product, RecipeIngredient, MealUnit, Label, SubstitutionRule, Event tables and indexes.",High,migrations,EPIC-DATA,db,5,,,"Sprint 1 (Oct 13–Oct 26, 2025)",2025-10-26
+MP360,DATA-001-const,DATA-001,Sub-task,Constraints & state checks,Enforce legal transitions via CHECK/app layer.,High,migrations,,db,2,,,"Sprint 1 (Oct 13–Oct 26, 2025)",2025-10-26
+MP360,DATA-002,,Story,Seed CSV importer,CLI to ingest seed CSVs.,High,seed,EPIC-DATA,db api,3,,,"Sprint 2 (Oct 27–Nov 09, 2025)",2025-11-09
+MP360,DATA-002-ut,DATA-002,Sub-task,Importer tests,"Bad rows, duplicate keys, partial failures.",High,tests,,api,2,,,"Sprint 2 (Oct 27–Nov 09, 2025)",2025-11-09
+MP360,INF-001,,Task,"CLI: create_network.sh (VPC, subnets, SGs)",Provision base network.,High,aws-cli networking,EPIC-INF,infra,3,,,"Sprint 1 (Oct 13–Oct 26, 2025)",2025-10-26
+MP360,INF-002,,Task,"CLI: create_data_plane.sh (S3, SQS DLQs, RDS, Redis)",Provision data plane.,High,aws-cli dataplane,EPIC-INF,infra,5,,,"Sprint 1 (Oct 13–Oct 26, 2025)",2025-10-26
+MP360,INF-003,,Task,"CLI: create_app_plane.sh (ECS, ALB, WAF)",Provision ECS/ALB; attach WAF.,High,aws-cli alb ecs,EPIC-INF,infra,3,,,"Sprint 2 (Oct 27–Nov 09, 2025)",2025-11-09
+MP360,OBS-001,,Task,Tracing (OTel) + CloudWatch dashboards,Instrument API/worker.,High,otel,EPIC-OBS,infra api,3,,,"Sprint 2 (Oct 27–Nov 09, 2025)",2025-11-09
+MP360,OBS-002,,Task,"CloudWatch alarms (p95, 5xx, DLQ depth, Lambda errors, RDS CPU)",Create alarms + notifications.,High,alarms,EPIC-OBS,infra,3,,,"Sprint 2 (Oct 27–Nov 09, 2025)",2025-11-09
+MP360,SEC-001,,Task,WAF rules + rate limit /scan,Attach WAF + rate limiting.,High,waf,EPIC-SEC,infra api,3,,,"Sprint 1 (Oct 13–Oct 26, 2025)",2025-10-26
+MP360,SEC-002,,Task,Secrets Manager integration,Move secrets to AWS SM.,High,secrets,EPIC-SEC,infra api,3,,,"Sprint 2 (Oct 27–Nov 09, 2025)",2025-11-09
+MP360,ANL-001,,Task,Athena DB + external tables,Query S3 events.,High,athena,EPIC-ANL,infra,3,,,"Sprint 3 (Nov 10–Nov 23, 2025)",2025-11-23
+MP360,ANL-002,,Task,Weekly KPI query/dashboard,"Leftover%, cost/serving, scan compliance.",High,kpi,EPIC-ANL,infra api,3,,,"Sprint 3 (Nov 10–Nov 23, 2025)",2025-11-23
+MP360,CI-001,,Task,CI: build & push to ECR,GitHub Actions pipeline.,High,ci ecr,EPIC-CI,devops,3,,,"Sprint 1 (Oct 13–Oct 26, 2025)",2025-10-26
+MP360,CI-002,,Task,Deploy to ECS (blue/green),Task def + service update.,High,ecs,EPIC-CI,devops infra,5,,,"Sprint 2 (Oct 27–Nov 09, 2025)",2025-11-09
+MP360,CI-003,,Task,Run DB migrations in pipeline,"Safe, idempotent apply.",High,migrations,EPIC-CI,devops db,3,,,"Sprint 1 (Oct 13–Oct 26, 2025)",2025-10-26

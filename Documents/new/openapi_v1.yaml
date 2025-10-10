@@ -1,0 +1,533 @@
+openapi: 3.1.0
+info:
+  title: Prep-to-Freezer Batch Cooking API
+  version: 1.0.0
+  description: |
+    REST API powering batch generation, pack-size optimization, labeling/QR,
+    pantry reconciliation, freezer state machine, and thaw scheduling.
+servers:
+  - url: https://api.example.com/v1
+    description: Production
+  - url: http://localhost:8080/v1
+    description: Local dev
+tags:
+  - name: Batch
+  - name: Cart
+  - name: Labels
+  - name: Scan
+  - name: Pantry
+  - name: Schedule
+  - name: Substitutions
+security:
+  - bearerAuth: []
+paths:
+  /batch/generate:
+    post:
+      tags: [Batch]
+      summary: Generate a batch plan, MealUnits (planned), cart demand and labels
+      operationId: generateBatch
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BatchGenerateRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BatchGenerateResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/Unprocessable'
+  /cart/optimize:
+    post:
+      tags: [Cart]
+      summary: Optimize shopping cart with pack sizes, substitutions, and pantry
+      operationId: optimizeCart
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CartOptimizeRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CartOptimizeResponse'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/Unprocessable'
+  /labels/print:
+    post:
+      tags: [Labels]
+      summary: Generate printable PDF of labels
+      operationId: printLabels
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LabelsPrintRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LabelsPrintResponse'
+        '422':
+          $ref: '#/components/responses/Unprocessable'
+  /scan:
+    post:
+      tags: [Scan]
+      summary: Advance MealUnit state via QR scan
+      operationId: scanLabel
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ScanRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScanResponse'
+        '422':
+          $ref: '#/components/responses/Unprocessable'
+  /pantry/check:
+    post:
+      tags: [Pantry]
+      summary: Reconcile pantry items and adjust needs
+      operationId: pantryCheck
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PantryCheckRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PantryCheckResponse'
+        '422':
+          $ref: '#/components/responses/Unprocessable'
+  /schedule/next:
+    get:
+      tags: [Schedule]
+      summary: Retrieve thaw tasks for the upcoming week
+      operationId: getNextSchedule
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScheduleNextResponse'
+  /substitutions/suggest:
+    post:
+      tags: [Substitutions]
+      summary: Suggest cost-saving/diet-safe ingredient swaps
+      operationId: suggestSubstitutions
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SubstitutionsSuggestRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SubstitutionsSuggestResponse'
+        '422':
+          $ref: '#/components/responses/Unprocessable'
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  responses:
+    BadRequest:
+      description: Bad Request
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    Conflict:
+      description: Conflict
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    Unprocessable:
+      description: Unprocessable entity
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+  schemas:
+    MealState:
+      type: string
+      enum: [planned, prepped, frozen, thawed, consumed, discarded, expired]
+    Container:
+      type: string
+      enum: [bag_quart, bag_gallon, foil_pan, vac_pouch, rigid_container]
+    Location:
+      type: string
+      enum: [pantry, fridge, freezer]
+    ScanAction:
+      type: string
+      enum: [freeze, thaw, consume, discard]
+    DietTag:
+      type: string
+      enum: [gluten_free, dairy_free, keto, low_fodmap, vegan, vegetarian, renal, general]
+    Ingredient:
+      type: object
+      required: [ingredient_id, name, canonical_unit]
+      properties:
+        ingredient_id: { type: string }
+        name: { type: string }
+        canonical_unit: { type: string, description: "Canonical unit for inventory math (e.g., g, ml)" }
+        density_g_per_ml: { type: number, nullable: true }
+        allergens:
+          type: array
+          items: { type: string }
+    Product:
+      type: object
+      required: [product_id, ingredient_id, pack_qty, pack_unit, retailer, price_cents]
+      properties:
+        product_id: { type: string }
+        ingredient_id: { type: string }
+        pack_qty: { type: number }
+        pack_unit: { type: string }
+        size_display: { type: string, nullable: true }
+        retailer: { type: string }
+        brand: { type: string, nullable: true }
+        upc: { type: string, nullable: true }
+        price_cents: { type: integer }
+        last_seen_at: { type: string, format: date-time, nullable: true }
+    RecipeIngredient:
+      type: object
+      required: [recipe_id, ingredient_id, qty, unit]
+      properties:
+        recipe_id: { type: string }
+        ingredient_id: { type: string }
+        qty: { type: number }
+        unit: { type: string }
+        prep_notes: { type: string, nullable: true }
+        freezer_safe: { type: boolean, default: true }
+        cooked_state:
+          type: string
+          enum: [raw, parcooked, cooked]
+          default: raw
+    MealUnit:
+      type: object
+      required: [meal_unit_id, recipe_id, servings, state, container]
+      properties:
+        meal_unit_id: { type: string }
+        recipe_id: { type: string }
+        servings: { type: integer }
+        state: { $ref: '#/components/schemas/MealState' }
+        container: { $ref: '#/components/schemas/Container' }
+        location: { $ref: '#/components/schemas/Location' }
+        label_id: { type: string, nullable: true }
+        frozen_at: { type: string, format: date-time, nullable: true }
+        thaw_by: { type: string, format: date-time, nullable: true }
+        consume_by: { type: string, format: date-time, nullable: true }
+        owner_id: { type: string, nullable: true }
+    Label:
+      type: object
+      required: [label_id, meal_unit_id, code]
+      properties:
+        label_id: { type: string }
+        meal_unit_id: { type: string }
+        code: { type: string, description: "Short slug/UUID encoded in QR" }
+        printed_at: { type: string, format: date-time, nullable: true }
+        text_cached: { type: string, nullable: true }
+    SubstitutionRule:
+      type: object
+      required: [source_ingredient_id, target_ingredient_id]
+      properties:
+        source_ingredient_id: { type: string }
+        target_ingredient_id: { type: string }
+        constraint:
+          type: object
+          additionalProperties: true
+          description: JSON object with constraints (e.g., protein_delta_g, price_delta_pct)
+    Error:
+      type: object
+      required: [error, message]
+      properties:
+        error: { type: string }
+        message: { type: string }
+        hint: { type: string, nullable: true }
+    BatchGenerateRequest:
+      type: object
+      required: [targets, store_mode, diet, time_constraints, inventory_policy, recipes]
+      properties:
+        targets:
+          type: object
+          required: [meals, servings_per_meal]
+          properties:
+            meals: { type: integer, minimum: 1 }
+            servings_per_meal: { type: integer, minimum: 1 }
+            budget_cents: { type: integer, nullable: true }
+        store_mode:
+          type: object
+          required: [type]
+          properties:
+            type: { type: string, enum: [club, grocery] }
+            retailers: { type: array, items: { type: string } }
+            max_stores: { type: integer, default: 1 }
+        diet:
+          type: object
+          properties:
+            tags: { type: array, items: { $ref: '#/components/schemas/DietTag' } }
+            macro_constraints:
+              type: object
+              additionalProperties: true
+        time_constraints:
+          type: object
+          properties:
+            batch_minutes: { type: integer }
+            equipment: { type: array, items: { type: string } }
+        inventory_policy:
+          type: object
+          properties:
+            use_pantry_first: { type: boolean, default: true }
+        recipes:
+          type: object
+          properties:
+            source: { type: string, enum: [ai, library, web_import] }
+            seed_ingredients: { type: array, items: { type: string } }
+    BatchGenerateResponse:
+      type: object
+      required: [batch_id, plan, meal_units, cart, labels]
+      properties:
+        batch_id: { type: string }
+        plan:
+          type: object
+          properties:
+            recipes:
+              type: array
+              items:
+                type: object
+                properties:
+                  recipe_id: { type: string }
+                  title: { type: string }
+                  servings: { type: integer }
+                  cooked_state: { type: string }
+                  packaging: { $ref: '#/components/schemas/Container' }
+                  reheat: { type: string }
+                  ingredients:
+                    type: array
+                    items: { $ref: '#/components/schemas/RecipeIngredient' }
+            stations:
+              type: array
+              items: { type: string }
+        meal_units:
+          type: array
+          items: { $ref: '#/components/schemas/MealUnit' }
+        cart:
+          type: object
+          properties:
+            lines:
+              type: array
+              items:
+                type: object
+                properties:
+                  ingredient_id: { type: string }
+                  need_qty: { type: number }
+                  need_unit: { type: string }
+            optimizer:
+              type: object
+              properties:
+                status: { type: string, enum: [pending, complete, failed] }
+        labels:
+          type: array
+          items: { $ref: '#/components/schemas/Label' }
+    CartOptimizeRequest:
+      type: object
+      required: [batch_id, retailers, max_stores]
+      properties:
+        batch_id: { type: string }
+        retailers: { type: array, items: { type: string } }
+        max_stores: { type: integer, minimum: 1 }
+        pantry_vector:
+          type: array
+          items:
+            type: object
+            required: [ingredient_id, qty, unit]
+            properties:
+              ingredient_id: { type: string }
+              qty: { type: number }
+              unit: { type: string }
+        allow_substitutions: { type: boolean, default: true }
+        price_context_override:
+          type: array
+          items:
+            type: object
+            required: [product_id, price_cents]
+            properties:
+              product_id: { type: string }
+              price_cents: { type: integer }
+    CartOptimizeResponse:
+      type: object
+      required: [cart_id, lines, totals]
+      properties:
+        cart_id: { type: string }
+        lines:
+          type: array
+          items:
+            type: object
+            properties:
+              ingredient_id: { type: string }
+              need_qty: { type: number }
+              need_unit: { type: string }
+              picks:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    product_id: { type: string }
+                    packs: { type: integer }
+                    pack_qty: { type: number }
+                    pack_unit: { type: string }
+                    unit_price_cents: { type: integer }
+                    extended_price_cents: { type: integer }
+              leftover_qty: { type: number }
+              leftover_unit: { type: string }
+              leftover_strategy: { type: string }
+              subs_applied:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    from: { type: string }
+                    to: { type: string }
+                    reason: { type: string }
+        totals:
+          type: object
+          properties:
+            items: { type: integer }
+            stores: { type: integer }
+            subtotal_cents: { type: integer }
+            predicted_leftover_pct: { type: number }
+    LabelsPrintRequest:
+      type: object
+      required: [batch_id, label_ids]
+      properties:
+        batch_id: { type: string }
+        label_ids:
+          type: array
+          items: { type: string }
+        paper: { type: string, default: avery_5160 }
+        include_qr: { type: boolean, default: true }
+        dark_mode: { type: boolean, default: false }
+    LabelsPrintResponse:
+      type: object
+      required: [pdf_url, count]
+      properties:
+        pdf_url: { type: string, format: uri }
+        count: { type: integer }
+    ScanRequest:
+      type: object
+      required: [label_code, action, timestamp]
+      properties:
+        label_code: { type: string }
+        action: { $ref: '#/components/schemas/ScanAction' }
+        timestamp: { type: string, format: date-time }
+    ScanResponse:
+      type: object
+      required: [meal_unit_id, prev_state, new_state]
+      properties:
+        meal_unit_id: { type: string }
+        prev_state: { $ref: '#/components/schemas/MealState' }
+        new_state: { $ref: '#/components/schemas/MealState' }
+        frozen_at: { type: string, format: date-time, nullable: true }
+        thaw_by: { type: string, format: date-time, nullable: true }
+        consume_by: { type: string, format: date-time, nullable: true }
+    PantryCheckRequest:
+      type: object
+      required: [cart_id, candidate_lines]
+      properties:
+        cart_id: { type: string }
+        candidate_lines:
+          type: array
+          items:
+            type: object
+            required: [ingredient_id, need_qty, need_unit]
+            properties:
+              ingredient_id: { type: string }
+              need_qty: { type: number }
+              need_unit: { type: string }
+    PantryCheckResponse:
+      type: object
+      required: [on_hand, adjusted_need]
+      properties:
+        on_hand:
+          type: array
+          items:
+            type: object
+            properties:
+              ingredient_id: { type: string }
+              assumed_qty: { type: number }
+              unit: { type: string }
+              confidence: { type: number }
+        adjusted_need:
+          type: array
+          items:
+            type: object
+            properties:
+              ingredient_id: { type: string }
+              need_qty: { type: number }
+              need_unit: { type: string }
+    ScheduleNextResponse:
+      type: object
+      properties:
+        tasks:
+          type: array
+          items:
+            type: object
+            properties:
+              task_id: { type: string }
+              type: { type: string, enum: [thaw] }
+              meal_unit_id: { type: string }
+              due_at: { type: string, format: date-time }
+              instructions: { type: string }
+    SubstitutionsSuggestRequest:
+      type: object
+      properties:
+        batch_id: { type: string }
+        max_suggestions: { type: integer, default: 5 }
+    SubstitutionsSuggestResponse:
+      type: object
+      properties:
+        suggestions:
+          type: array
+          items:
+            type: object
+            properties:
+              ingredient_id: { type: string }
+              swap_to: { type: string }
+              savings_cents: { type: integer }
+              macro_delta:
+                type: object
+                additionalProperties: true
+              diet_compatible: { type: boolean }

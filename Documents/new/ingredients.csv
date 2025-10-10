@@ -1,0 +1,10 @@
+ingredient_id,name,canonical_unit,density_g_per_ml,allergens
+ing_chicken_thigh,Chicken thighs,g,,
+ing_chicken_breast,Chicken breast,g,,
+ing_ground_beef_90,Ground beef 90% lean,g,,
+ing_ground_beef_80,Ground beef 80% lean,g,,
+ing_onion,Yellow onion,g,,
+ing_rice,White rice,g,,
+ing_garlic,Garlic,g,,
+ing_freezer_bag_gallon,Freezer bag (gallon),count,,
+ing_foil_pan,Foil pan (9x13),count,,

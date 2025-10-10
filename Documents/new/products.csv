@@ -1,0 +1,13 @@
+product_id,ingredient_id,pack_qty,pack_unit,size_display,retailer,brand,upc,price_cents,last_seen_at
+prod_costco_chicken_thigh_2_7kg,ing_chicken_thigh,2.72,kg,2.72 kg tray,costco,Kirkland,,1199,2025-09-28T00:00:00Z
+prod_costco_chicken_breast_2_5kg,ing_chicken_breast,2.5,kg,2.5 kg tray,costco,Kirkland,,1499,2025-09-28T00:00:00Z
+prod_costco_ground_beef_2_27kg_90,ing_ground_beef_90,2.27,kg,2.27 kg pack,costco,Kirkland,,1699,2025-09-28T00:00:00Z
+prod_costco_ground_beef_2_27kg_80,ing_ground_beef_80,2.27,kg,2.27 kg pack,costco,Kirkland,,1499,2025-09-28T00:00:00Z
+prod_costco_onion_4_54kg,ing_onion,4.54,kg,10 lb bag,costco,,,749,2025-09-28T00:00:00Z
+prod_costco_rice_9_07kg,ing_rice,9.07,kg,20 lb bag,costco,,,1299,2025-09-28T00:00:00Z
+prod_costco_garlic_1kg,ing_garlic,1.0,kg,1 kg,costco,,,699,2025-09-28T00:00:00Z
+prod_costco_freezer_bag_gallon_100,ing_freezer_bag_gallon,100,count,100 ct,costco,Ziploc,,1599,2025-09-28T00:00:00Z
+prod_costco_foil_pan_15,ing_foil_pan,15,count,15 ct,costco,,,1399,2025-09-28T00:00:00Z
+prod_grocery_chicken_thigh_0_9kg,ing_chicken_thigh,0.91,kg,2 lb tray,grocery,,,569,2025-09-28T00:00:00Z
+prod_grocery_onion_0_9kg,ing_onion,0.91,kg,2 lb bag,grocery,,,249,2025-09-28T00:00:00Z
+prod_grocery_rice_0_9kg,ing_rice,0.91,kg,2 lb bag,grocery,,,249,2025-09-28T00:00:00Z

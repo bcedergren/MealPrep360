@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: content-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: content-service
+  template:
+    metadata:
+      labels:
+        app: content-service
+    spec:
+      containers:
+        - name: content
+          image: ghcr.io/mealprep360/content-service:dev
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 4020
+          env:
+            - name: PORT
+              value: '4020'
+            - name: LOG_LEVEL
+              value: 'info'
+          resources:
+            requests:
+              memory: '128Mi'
+              cpu: '100m'
+            limits:
+              memory: '256Mi'
+              cpu: '500m'

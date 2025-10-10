@@ -1,0 +1,153 @@
+Project,External ID,Parent External ID,Issue Type,Summary,Description,Priority,Labels,Epic Link,Components,Story Points,Sprint,Due Date
+MP360,EPIC-FREEZER,,Epic,[EPIC] Freezer/Labels/Scanner backbone,"System of record for meal units, QR label generation, scan state machine, thaw windows.",High,,,platform,,"Sprint 1 (Oct 13–Oct 26, 2025)",2025-10-26
+MP360,EPIC-PLANNING,,Epic,[EPIC] Planning (merge of meal-plan + shopping),Unified planning API: plan generation + smart shopping list via optimizer and pricing.,High,,,platform,,"Sprint 1 (Oct 13–Oct 26, 2025)",2025-10-26
+MP360,EPIC-OPT,,Epic,[EPIC] Cart Optimizer,Greedy+repair optimizer with retailer caps and substitution rules; integrates pricing cache.,High,,,platform,,"Sprint 1 (Oct 13–Oct 26, 2025)",2025-10-26
+MP360,EPIC-PRICING,,Epic,[EPIC] Pricing Adapters,"External retailer price lookups with caching, quotas, and fallbacks.",High,,,platform,,"Sprint 2 (Oct 27–Nov 09, 2025)",2025-11-09
+MP360,EPIC-SCHED,,Epic,[EPIC] Thaw Scheduler & Notifications,"Daily compute of thaw/consume windows, push via WebSocket; hooks for FCM/APNs.",High,,,platform,,"Sprint 2 (Oct 27–Nov 09, 2025)",2025-11-09
+MP360,EPIC-FRONT,,Epic,"[EPIC] Web UX (Batch Day, Freezer, Scan, Labels)",End-to-end user flow on web.,High,,,web,,"Sprint 1 (Oct 13–Oct 26, 2025)",2025-10-26
+MP360,EPIC-MOB,,Epic,"[EPIC] Mobile UX (Scanner, Freezer, Push)",Native scanning and reminders.,High,,,mobile,,"Sprint 1 (Oct 13–Oct 26, 2025)",2025-10-26
+MP360,EPIC-GW,,Epic,[EPIC] API Gateway & Auth,"Clerk verification at edge, routing, rate limits.",High,,,platform,,"Sprint 1 (Oct 13–Oct 26, 2025)",2025-10-26
+MP360,EPIC-OBS,,Epic,[EPIC] Observability & Alarms,"OTel traces, dashboards, alarms, rate-limit metrics.",High,,,platform,,"Sprint 2 (Oct 27–Nov 09, 2025)",2025-11-09
+MP360,EPIC-SEC,,Epic,[EPIC] Security & Network Policies,"NetworkPolicies, TLS, WAF, secrets.",High,,,platform,,"Sprint 1 (Oct 13–Oct 26, 2025)",2025-10-26
+MP360,EPIC-REF,,Epic,[EPIC] Refactor: planning-service + fold blog/social,Merge services and simplify architecture; decommission old services post-cutover.,High,,,platform,,"Sprint 1 (Oct 13–Oct 26, 2025)",2025-10-26
+MP360,EPIC-DB,,Epic,[EPIC] DB Strategy & (Optional) Postgres Migration,"Evaluate and, if approved, migrate core freezer/inventory to Postgres.",High,,,platform,,"Sprint 3 (Nov 10–Nov 23, 2025)",2025-11-23
+MP360,API-FREEZER-001,,Story,"Freezer service: meal units, scan transitions, list","Implement Express service with Mongo (or Postgres if EPIC-DB proceeds). 
+Endpoints:
+- POST /freezer/meal-units/batch
+- POST /freezer/scan
+- GET  /freezer
+
+Code (transition mapping):
+```ts
+const map:any = { freeze:'frozen', thaw:'thawed', consume:'consumed', discard:'discarded' };
+```",High,freezer api,EPIC-FREEZER,api,8,"Sprint 1 (Oct 13–Oct 26, 2025)",2025-10-26
+MP360,API-FREEZER-001-UT,API-FREEZER-001,Sub-task,Unit tests: legal/illegal transitions,"Cover planned→prepped→frozen→thawed→consumed|discarded|expired.
+Assert 400 on illegal transitions.",High,tests,,api,3,"Sprint 1 (Oct 13–Oct 26, 2025)",2025-10-26
+MP360,API-LABELS-001,,Story,Label service: QR PDF generation,"Generate Avery-5160-like PDF with QR codes. Serve inline (no S3 in v1).
+Endpoint: POST /labels/print { mealUnitIds[] } → PDF.
+
+Snippet:
+```ts
+const doc = new PDFDocument({ size: 'LETTER', margin: 36 });
+const qr = await QRCode.toDataURL(code, { margin:0, scale:4 });
+doc.image(Buffer.from(qr.split(',')[1],'base64'), x+5, y+5, { width:64, height:64 });
+```",High,labels pdf,EPIC-FREEZER,api,5,"Sprint 1 (Oct 13–Oct 26, 2025)",2025-10-26
+MP360,API-FREEZER-002,,Story,Thaw windows + consumeBy computation,"Set `consumeBy` when transitioning to `thawed` by protein type.
+
+Snippet:
+```ts
+function consumeBy(protein:'poultry'|'ground'|'cooked'|'other', thawAt:Date){
+  const d = (n:number)=> new Date(thawAt.getTime()+n*86400000);
+  return protein==='cooked'? d(4) : d(2);
+}
+```",High,thaw,EPIC-FREEZER,api,3,"Sprint 2 (Oct 27–Nov 09, 2025)",2025-11-09
+MP360,PLAN-001,,Story,Create planning-service (merge meal-plan + shopping),"New endpoints:
+- POST /planning/plan
+- POST /planning/smart-list → builds demand, calls pricing + optimizer
+
+Gateway remap:
+- /meal-plan/* → /planning/plan
+- /shopping/*  → /planning/smart-list",High,planning,EPIC-PLANNING,api,8,"Sprint 1 (Oct 13–Oct 26, 2025)",2025-10-26
+MP360,PLAN-001-OPT,PLAN-001,Sub-task,Wire optimizer client inside planning-service,"Call optimizer:
+```ts
+await fetch(`${OPTIMIZER_URL}/optimizer/cart`, { method:'POST', body: JSON.stringify({ demand, pantry, params, products }), headers:{'Content-Type':'application/json'} });
+```",High,optimizer,,api,2,"Sprint 1 (Oct 13–Oct 26, 2025)",2025-10-26
+MP360,PLAN-001-PRI,PLAN-001,Sub-task,Wire pricing-service client with cache,Cache last-known prices in Redis 24h; stale-while-revalidate to avoid blocking.,High,pricing cache,,api,3,"Sprint 2 (Oct 27–Nov 09, 2025)",2025-11-09
+MP360,OPT-001,,Story,Cart optimizer (greedy + repair + maxStores),"Implement greedy by unit price; add repair step to reduce leftovers.
+Input: demand, pantry, products, params {{maxStores, allowSubs}}.
+Output: lines[], leftoverPct, subtotalCents, storeCount.
+
+Pseudocode included in Engineering Handoff.",High,optimizer,EPIC-OPT,api,8,"Sprint 1 (Oct 13–Oct 26, 2025)",2025-10-26
+MP360,OPT-001-UT,OPT-001,Sub-task,Unit tests for greedy/repair/store-cap,"Cover edge cases: zero-demand, no-candidates, tie-breakers.",High,tests,,api,3,"Sprint 1 (Oct 13–Oct 26, 2025)",2025-10-26
+MP360,PRICE-001,,Story,Pricing adapters (retailer APIs) + rate limits,"Adapters: walmart, kroger, target, heb.
+Budget: cache 24h, retry w/ jitter, circuit breaker (mesh or lib).
+
+Interface:
+```ts
+export interface PriceQuery { upc?:string; name?:string; retailer:'walmart'|'kroger'|'heb'|'target'; zip?:string; storeId?:string; }
+export interface PriceResult { retailer:string; productId:string; name:string; priceCents:number; packQty?:number; packUnit?:'g'|'ml'|'count'; }
+```",High,pricing egress,EPIC-PRICING,api,8,"Sprint 2 (Oct 27–Nov 09, 2025)",2025-11-09
+MP360,PRICE-001-QUOTA,PRICE-001,Sub-task,Ingress & app rate limits for /pricing/*,"NGINX example:
+```yaml
+nginx.ingress.kubernetes.io/limit-rps: ""5""
+```
+App-level token bucket in Redis for per-user quotas.",High,rate-limit,,infra,2,"Sprint 2 (Oct 27–Nov 09, 2025)",2025-11-09
+MP360,SCHED-001,,Story,Daily thaw CronJob + WebSocket notifications,"K8s CronJob runs at 12:00 UTC; queries items due within 24h; publishes thaw_task_due.
+
+CronJob:
+```yaml
+apiVersion: batch/v1
+kind: CronJob
+spec:
+  schedule: ""0 12 * * *""
+  jobTemplate: {{ spec: {{ template: {{ spec: {{ containers:[{{ name:'scheduler', image:'...'}}], restartPolicy:'OnFailure' }} }} }} }}
+```",High,scheduler ws,EPIC-SCHED,infra,5,"Sprint 2 (Oct 27–Nov 09, 2025)",2025-11-09
+MP360,WEB-001,,Story,Batch Day wizard (targets → optimize → labels),3-step flow calling planning-service and label-service.,High,frontend batchday,EPIC-FRONT,web,5,"Sprint 1 (Oct 13–Oct 26, 2025)",2025-10-26
+MP360,WEB-001-UT,WEB-001,Sub-task,Unit tests + a11y + copy polish,WCAG AA on forms; i18n copy.,High,tests accessibility copy,,web,3,"Sprint 1 (Oct 13–Oct 26, 2025)",2025-10-26
+MP360,WEB-002,,Story,Freezer list + quick actions,Filter by state/location; thaw/consume/discard.,High,frontend freezer,EPIC-FRONT,web,5,"Sprint 2 (Oct 27–Nov 09, 2025)",2025-11-09
+MP360,WEB-003,,Story,Web scanner (BarcodeDetector) + offline queue,Idempotency-Key on POST /freezer/scan.,High,scanner pwa,EPIC-FRONT,web,5,"Sprint 2 (Oct 27–Nov 09, 2025)",2025-11-09
+MP360,MOB-001,,Story,Mobile scanner + actions → /freezer/scan,"Haptics, retry, device QA.",High,scanner,EPIC-MOB,mobile,5,"Sprint 1 (Oct 13–Oct 26, 2025)",2025-10-26
+MP360,MOB-002,,Story,Mobile freezer views + thaw reminders,Deep link from push/WS.,High,freezer push,EPIC-MOB,mobile,5,"Sprint 3 (Nov 10–Nov 23, 2025)",2025-11-23
+MP360,GW-001,,Story,Gateway: Clerk verification at edge + headers,Forward x-user-id; drop token internally.,High,auth,EPIC-GW,gateway,3,"Sprint 1 (Oct 13–Oct 26, 2025)",2025-10-26
+MP360,GW-002,,Story,"Routes: /planning/*, /optimizer/*, /pricing/*",Proxy to new services; set timeouts.,High,routing,EPIC-GW,gateway,3,"Sprint 1 (Oct 13–Oct 26, 2025)",2025-10-26
+MP360,GW-003,,Story,Rate-limit: /freezer/scan + /pricing/*,Ingress and app-level buckets.,High,rate-limit,EPIC-GW,gateway,3,"Sprint 2 (Oct 27–Nov 09, 2025)",2025-11-09
+MP360,OBS-001,,Story,OpenTelemetry traces + dashboards,Trace IDs through gateway → services.,High,otel,EPIC-OBS,infra,5,"Sprint 2 (Oct 27–Nov 09, 2025)",2025-11-09
+MP360,OBS-002,,Story,"Alarms: p95 latency, 5xx, DLQ depth, CronJob failures",Pager thresholds + Slack notifications.,High,alarms,EPIC-OBS,infra,3,"Sprint 2 (Oct 27–Nov 09, 2025)",2025-11-09
+MP360,SEC-001,,Story,NetworkPolicies: restrict east-west traffic,Gateway-only ingress; DB egress.,High,netpol,EPIC-SEC,infra,3,"Sprint 1 (Oct 13–Oct 26, 2025)",2025-10-26
+MP360,SEC-002,,Story,Ingress hardening (HSTS/timeouts/body size),Add annotations to ingress.,High,ingress,EPIC-SEC,infra,2,"Sprint 1 (Oct 13–Oct 26, 2025)",2025-10-26
+MP360,SEC-003,,Story,Secrets via External Secrets / SealedSecrets,Backed by cloud KMS/SM.,High,secrets,EPIC-SEC,infra,3,"Sprint 1 (Oct 13–Oct 26, 2025)",2025-10-26
+MP360,REF-001,,Story,Fold blog-service/social-service into Frontend,"Next.js routes, remove services post-cutover.",High,refactor,EPIC-REF,web,5,"Sprint 1 (Oct 13–Oct 26, 2025)",2025-10-26
+MP360,REF-002,,Story,Decommission shopping-service post cutover,Remove manifests/workflows.,High,refactor,EPIC-REF,infra,2,"Sprint 2 (Oct 27–Nov 09, 2025)",2025-11-09
+MP360,CI-001,,Story,Workflows per service (build→push→deploy),"GHCR_PAT, k8s-deploy. Tag by SHA.",High,cicd,EPIC-GW,devops,3,"Sprint 1 (Oct 13–Oct 26, 2025)",2025-10-26
+MP360,DB-001,,Story,Evaluate Postgres for transactional core,"Decision doc: pros/cons, effort, roll-out.",High,db decision,EPIC-DB,db,3,"Sprint 3 (Nov 10–Nov 23, 2025)",2025-11-23
+MP360,DB-002,,Story,(Optional) Create Postgres schema + migrations,If approved by DB-001.,High,db migrations,EPIC-DB,db,5,"Sprint 3 (Nov 10–Nov 23, 2025)",2025-11-23
+MP360,DB-002-SQL,DB-002,Sub-task,"DDL for core tables (meal_unit, label, product, ingredient)","Example (excerpt):
+```sql
+create table meal_unit (
+  id uuid primary key,
+  recipe_id text not null,
+  servings int not null,
+  state text not null check (state in ('planned','prepped','frozen','thawed','consumed','discarded','expired')),
+  label_code text unique not null,
+  consume_by timestamptz,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+create index meal_unit_state_idx on meal_unit(state, consume_by);
+```",High,sql,,db,3,"Sprint 3 (Nov 10–Nov 23, 2025)",2025-11-23
+MP360,DB-003,,Story,Dual-write bridge + backfill script,Short-lived dual-write; one-off migration job.,High,migration,EPIC-DB,db,5,"Sprint 3 (Nov 10–Nov 23, 2025)",2025-11-23
+MP360,CODE-001,,Task,Idempotency middleware (Redis),"Drop-in Express middleware:
+```ts
+import Redis from 'ioredis';
+const r = new Redis(process.env.REDIS_URL!);
+export function idempotent(ttl=600){
+  return async (req,res,next)=>{
+    const k=req.header('Idempotency-Key'); if(!k) return next();
+    const ck=`idem:${k}`; const seen=await r.get(ck);
+    if(seen){ const c=JSON.parse(seen); res.status(c.status); return res.send(c.body); }
+    const send=res.send.bind(res); (res as any).send=(b:any)=>{ r.setex(ck,ttl,JSON.stringify({status:res.statusCode,body:b})); return send(b) };
+    next();
+  }
+}
+```",High,middleware idempotency,EPIC-GW,api,2,"Sprint 1 (Oct 13–Oct 26, 2025)",2025-10-26
+MP360,CODE-002,,Task,Ingress annotations for HSTS/timeouts/body size,"Snippet:
+```yaml
+nginx.ingress.kubernetes.io/proxy-read-timeout: ""30""
+nginx.ingress.kubernetes.io/proxy-send-timeout: ""30""
+nginx.ingress.kubernetes.io/proxy-body-size: ""4m""
+nginx.ingress.kubernetes.io/server-snippet: |
+  add_header Strict-Transport-Security ""max-age=31536000; includeSubDomains"" always;
+```",High,ingress,EPIC-SEC,infra,1,"Sprint 1 (Oct 13–Oct 26, 2025)",2025-10-26
+MP360,CODE-003,,Task,Deployment probes/resources/HPA/PDB templates,"```yaml
+resources: { requests: { cpu: ""100m"", memory: ""256Mi"" }, limits: { cpu: ""500m"", memory: ""512Mi"" } }
+readinessProbe: { httpGet: { path: /healthz, port: 4001 }, initialDelaySeconds: 5, periodSeconds: 5 }
+livenessProbe:  { httpGet: { path: /healthz, port: 4001 }, initialDelaySeconds: 10, periodSeconds: 10 }
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+spec: { minReplicas: 2, maxReplicas: 10, metrics: [ { type: Resource, resource: { name: cpu, target: { type: Utilization, averageUtilization: 60 } } } ] }
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+spec: { minAvailable: 1, selector: { matchLabels: { app: freezer-service } } }
+```",High,hpa pdb probes,EPIC-OBS,infra,2,"Sprint 2 (Oct 27–Nov 09, 2025)",2025-11-09
