@@ -1,0 +1,54 @@
+Project,External ID,Parent External ID,Issue Type,Summary,Description,Priority,Labels,Epic Link,Components,Story Points,Sprint,Due Date
+MP360,EPIC-BATCHDAY,,Epic,[EPIC] Batch Day Core Implementation,"End-to-end: /planning/plan → /planning/smart-list → /labels/print → /freezer/scan. Includes gateway routes, stubs, dev page, observability, security, and CI/CD.",High,batchday core,,program,,"Sprint 1 (Oct 13–Oct 26, 2025)",2025-10-26
+MP360,PLAN-SETUP,,Story,Add Planning Service (merge meal-plan + shopping),"Create `services/planning-service` with endpoints:
+- POST /planning/plan
+- POST /planning/smart-list
+Add GET /healthz. Local dev commands:
+```
+cd services/planning-service
+npm ci
+npm run dev
+curl -s localhost:4010/healthz
+```",High,planning service,EPIC-BATCHDAY,api,5,"Sprint 1 (Oct 13–Oct 26, 2025)",2025-10-26
+MP360,PLAN-DEP,PLAN-SETUP,Sub-task,K8s deployment/service for planning-service,"Add Deployment + Service manifests (dev). Set probes, resources, and imagePullPolicy. Ensure namespace matches.",High,k8s deploy,,infra,2,"Sprint 1 (Oct 13–Oct 26, 2025)",2025-10-26
+MP360,PLAN-AUTH,PLAN-SETUP,Sub-task,Clerk JWT verification middleware,Implement JWKS verify in `src/auth.ts` using issuer and audience env. Return 401 on invalid token.,High,auth clerk,,api,2,"Sprint 1 (Oct 13–Oct 26, 2025)",2025-10-26
+MP360,GW-ROUTES,,Story,Update API Gateway routes for planning and stubs,"Proxy:
+- POST /planning/plan          → planning-service
+- POST /planning/smart-list    → planning-service
+Prepare (stub OK today):
+- POST /optimizer/cart         → optimizer-service
+- POST /labels/print           → label-service
+- POST /freezer/scan           → freezer-service
+Set timeouts (5s optimizer, 3s pricing) and rate limits (scan=10 rps/IP, pricing=5 rps/IP).",High,routing ratelimit,EPIC-BATCHDAY,gateway,3,"Sprint 1 (Oct 13–Oct 26, 2025)",2025-10-26
+MP360,WEB-BATCH,,Story,Frontend: hidden /batch-day flow,"Create dev-only page `/batch-day` to call:
+1) POST /planning/plan
+2) POST /planning/smart-list
+3) (stub) POST /labels/print
+Guard via feature flag or dev-only route. Show JSON results on screen.",High,frontend batchday,EPIC-BATCHDAY,web,3,"Sprint 1 (Oct 13–Oct 26, 2025)",2025-10-26
+MP360,STUBS-SVCS,,Story,Implement stubs for optimizer/label/freezer,"Add minimal handlers (gateway or temp services) returning canned responses:
+- /optimizer/cart → `{ ""lines"": [], ""leftoverPct"": 10, ""subtotalCents"": 4500, ""storeCount"": 1 }`
+- /labels/print   → `{ ""pdfUrl"": ""https://example.com/dev-labels.pdf"" }`
+- /freezer/scan   → `{ ""ok"": true, ""state"": ""frozen"" }`",High,stubs,EPIC-BATCHDAY,api,3,"Sprint 1 (Oct 13–Oct 26, 2025)",2025-10-26
+MP360,CONTENT-WIRE,,Story,Wire Content Service (API + worker) behind /content/*,"Extract `services/content-service` from `content_service_bundle_full.zip`.
+Commands:
+```
+cd services/content-service
+npm ci
+npm run dev      # :4020
+npm run worker
+```
+Gateway routes:
+- POST /content/blog/outline
+- POST /content/blog/draft
+- GET  /content/jobs/:id
+Apply K8s Secret from `services/content-service/k8s/secret-example.yaml` with real values.",High,content queue,EPIC-BATCHDAY,api,5,"Sprint 1 (Oct 13–Oct 26, 2025)",2025-10-26
+MP360,OBS-MIN,,Story,Observability: health checks + request logging,Ensure each new service exposes GET /healthz. Add request logging with latency at gateway & services (pino in content-service).,High,observability healthz,EPIC-BATCHDAY,infra,2,"Sprint 1 (Oct 13–Oct 26, 2025)",2025-10-26
+MP360,SEC-MIN,,Story,Security: Clerk verification + NetworkPolicies + rate limits,Verify Clerk audience/issuer on gateway/services. Add NetworkPolicies so only gateway can call services. Enforce endpoint rate limits.,High,security netpol,EPIC-BATCHDAY,infra,3,"Sprint 1 (Oct 13–Oct 26, 2025)",2025-10-26
+MP360,CICD,,Story,CI/CD for planning-service and content-service,Ensure GitHub Actions build/test and push images; deploy to dev namespace. Add GHCR_PAT.,High,cicd,EPIC-BATCHDAY,devops,3,"Sprint 1 (Oct 13–Oct 26, 2025)",2025-10-26
+MP360,QA-DEV,,Story,Dev validation of end-to-end flow,"Validate:
+- /planning/plan and /planning/smart-list return 200s with JWT
+- /batch-day runs end-to-end
+- /content/blog/outline and /content/blog/draft (with Clerk JWT)
+- Ingress routes hit correct services (check gateway logs)",High,validation,EPIC-BATCHDAY,qa,3,"Sprint 1 (Oct 13–Oct 26, 2025)",2025-10-26
+MP360,ROLLOUT,,Story,Rollout plan: dev → staging → prod (flagged),Deploy to dev and validate; stage with real services and dashboards; prod behind feature flag for internal testers.,High,rollout,EPIC-BATCHDAY,program,2,"Sprint 2 (Oct 27–Nov 09, 2025)",2025-11-09
+MP360,S2-PREP,,Story,Sprint 2 prep: real optimizer/label/freezer + scheduler,"Plan implementation for optimizer, label (PDF+QR+S3), freezer (state machine), thaw scheduler + push.",High,planning,EPIC-BATCHDAY,program,2,"Sprint 2 (Oct 27–Nov 09, 2025)",2025-11-09
