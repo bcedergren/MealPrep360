@@ -48,8 +48,8 @@ Resources:
       DBSubnetGroupName: mealprep360-db-subnet-group
       DBSubnetGroupDescription: Subnet group for MealPrep360 PostgreSQL
       SubnetIds:
-        - Fn::ImportValue: !Sub '${VPCStackName}-PrivateSubnet1'
-        - Fn::ImportValue: !Sub '${VPCStackName}-PrivateSubnet2'
+        - subnet-0ae0a250bc8c8b432
+        - subnet-076d8d7e0be353dee
       Tags:
         - Key: Name
           Value: mealprep360-db-subnet-group
@@ -62,15 +62,13 @@ Resources:
     Properties:
       GroupName: mealprep360-db-sg
       GroupDescription: Security group for MealPrep360 PostgreSQL
-      VpcId:
-        Fn::ImportValue: !Sub '${VPCStackName}-VPC'
+      VpcId: vpc-0920898c0a4c35b63
       SecurityGroupIngress:
-        # Allow from ECS security group
+        # Allow from anywhere in VPC (you can restrict this later)
         - IpProtocol: tcp
           FromPort: 5432
           ToPort: 5432
-          SourceSecurityGroupId:
-            Fn::ImportValue: !Sub '${VPCStackName}-ECSSecurityGroup'
+          CidrIp: 10.0.0.0/16
       Tags:
         - Key: Name
           Value: mealprep360-db-sg
