@@ -1,0 +1,136 @@
+# Python Microservices for MealPrep360
+# Run with: docker-compose -f docker-compose.python-services.yml up -d
+
+version: '3.8'
+
+services:
+  # 1. AI Service - Recipe generation, blog content, suggestions
+  ai-service:
+    build: ./MealPrep360-AIService
+    container_name: mealprep360-ai-service
+    ports:
+      - "8000:8000"
+    env_file:
+      - ./MealPrep360-AIService/.env
+    networks:
+      - python-services
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # 2. Analytics Service - Data analytics with Pandas
+  analytics-service:
+    build: ./MealPrep360-AnalyticsService
+    container_name: mealprep360-analytics-service
+    ports:
+      - "8001:8001"
+    environment:
+      - MONGODB_URI=${MONGODB_URI}
+      - REDIS_HOST=redis
+    networks:
+      - python-services
+    depends_on:
+      - redis
+    restart: unless-stopped
+
+  # 3. Image Service - Image optimization with Pillow
+  image-service:
+    build: ./MealPrep360-ImageService
+    container_name: mealprep360-image-service
+    ports:
+      - "8002:8002"
+    networks:
+      - python-services
+    restart: unless-stopped
+
+  # 4. Worker Service - Celery background jobs
+  worker-service:
+    build: ./MealPrep360-WorkerService
+    container_name: mealprep360-worker-service
+    environment:
+      - MONGODB_URI=${MONGODB_URI}
+      - REDIS_HOST=redis
+      - AI_SERVICE_URL=http://ai-service:8000
+      - IMAGE_SERVICE_URL=http://image-service:8002
+    networks:
+      - python-services
+    depends_on:
+      - redis
+      - ai-service
+      - image-service
+    restart: unless-stopped
+
+  # 5. Nutrition Service - USDA API integration
+  nutrition-service:
+    build: ./MealPrep360-NutritionService
+    container_name: mealprep360-nutrition-service
+    ports:
+      - "8003:8003"
+    environment:
+      - MONGODB_URI=${MONGODB_URI}
+      - USDA_API_KEY=${USDA_API_KEY:-DEMO_KEY}
+    networks:
+      - python-services
+    restart: unless-stopped
+
+  # 6. ML Service - Search and recommendations
+  ml-service:
+    build: ./MealPrep360-MLService
+    container_name: mealprep360-ml-service
+    ports:
+      - "8004:8004"
+    environment:
+      - MONGODB_URI=${MONGODB_URI}
+    networks:
+      - python-services
+    restart: unless-stopped
+
+  # 7. Report Service - PDF generation
+  report-service:
+    build: ./MealPrep360-ReportService
+    container_name: mealprep360-report-service
+    ports:
+      - "8005:8005"
+    environment:
+      - MONGODB_URI=${MONGODB_URI}
+    networks:
+      - python-services
+    restart: unless-stopped
+
+  # Celery Flower - Monitoring UI for workers
+  flower:
+    image: mher/flower:2.0
+    container_name: mealprep360-flower
+    command: celery --broker=redis://redis:6379/3 flower --port=5555
+    ports:
+      - "5555:5555"
+    environment:
+      - CELERY_BROKER_URL=redis://redis:6379/3
+    networks:
+      - python-services
+    depends_on:
+      - redis
+      - worker-service
+
+  # Redis (shared by all services)
+  redis:
+    image: redis:7-alpine
+    container_name: mealprep360-redis-python
+    ports:
+      - "6380:6379"  # Different port to avoid conflicts
+    volumes:
+      - redis_python_data:/data
+    networks:
+      - python-services
+    restart: unless-stopped
+
+networks:
+  python-services:
+    driver: bridge
+
+volumes:
+  redis_python_data:
+
