@@ -1,0 +1,46 @@
+{
+  "family": "mealprep360-api-gateway",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": ["FARGATE"],
+  "cpu": "1024",
+  "memory": "2048",
+  "executionRoleArn": "arn:aws:iam::588443559352:role/mealprep360-ecs-ECSTaskExecutionRole-1VLaotrBGoYd",
+  "taskRoleArn": "arn:aws:iam::588443559352:role/mealprep360-ecs-ECSTaskRole-Pr5Me0JoBkuP",
+  "containerDefinitions": [
+    {
+      "name": "api-gateway",
+      "image": "588443559352.dkr.ecr.us-east-1.amazonaws.com/mealprep360/api-gateway:latest",
+      "cpu": 1024,
+      "memory": 2048,
+      "essential": true,
+      "portMappings": [{"containerPort": 3001, "protocol": "tcp"}],
+      "environment": [
+        {"name": "NODE_ENV", "value": "production"},
+        {"name": "PORT", "value": "3001"}
+      ],
+      "secrets": [
+        {"name": "MONGODB_URI", "valueFrom": "arn:aws:secretsmanager:us-east-1:588443559352:secret:mealprep360/mongodb-uri"},
+        {"name": "REDIS_URL", "valueFrom": "arn:aws:secretsmanager:us-east-1:588443559352:secret:mealprep360/redis-url"},
+        {"name": "JWT_SECRET", "valueFrom": "arn:aws:secretsmanager:us-east-1:588443559352:secret:mealprep360/jwt-secret"},
+        {"name": "CLERK_SECRET_KEY", "valueFrom": "arn:aws:secretsmanager:us-east-1:588443559352:secret:mealprep360/clerk-secret-key"},
+        {"name": "OPENAI_API_KEY", "valueFrom": "arn:aws:secretsmanager:us-east-1:588443559352:secret:mealprep360/openai-api-key"},
+        {"name": "RECIPE_SERVICE_API_KEY", "valueFrom": "arn:aws:secretsmanager:us-east-1:588443559352:secret:mealprep360/recipe-api-key"},
+        {"name": "MEALPLAN_SERVICE_API_KEY", "valueFrom": "arn:aws:secretsmanager:us-east-1:588443559352:secret:mealprep360/mealplan-api-key"},
+        {"name": "SHOPPING_SERVICE_API_KEY", "valueFrom": "arn:aws:secretsmanager:us-east-1:588443559352:secret:mealprep360/shopping-api-key"},
+        {"name": "SOCIAL_SERVICE_API_KEY", "valueFrom": "arn:aws:secretsmanager:us-east-1:588443559352:secret:mealprep360/social-api-key"},
+        {"name": "BLOG_SERVICE_API_KEY", "valueFrom": "arn:aws:secretsmanager:us-east-1:588443559352:secret:mealprep360/blog-api-key"},
+        {"name": "WEBSOCKET_SERVICE_API_KEY", "valueFrom": "arn:aws:secretsmanager:us-east-1:588443559352:secret:mealprep360/websocket-api-key"}
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-create-group": "true",
+          "awslogs-group": "/ecs/mealprep360/api-gateway",
+          "awslogs-region": "us-east-1",
+          "awslogs-stream-prefix": "ecs"
+        }
+      }
+    }
+  ]
+}
+

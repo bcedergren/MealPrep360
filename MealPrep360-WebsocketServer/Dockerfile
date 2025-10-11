@@ -8,7 +8,7 @@ WORKDIR /app
 
 # Copy package files
 COPY package*.json ./
-RUN npm ci --production
+RUN npm install --production
 
 # Production image
 FROM base AS runner

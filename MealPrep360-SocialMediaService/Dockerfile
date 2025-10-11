@@ -8,7 +8,7 @@ WORKDIR /app
 
 # Copy package files
 COPY package*.json ./
-RUN npm ci
+RUN npm install --production=false
 
 # Rebuild the source code only when needed
 FROM base AS builder
@@ -17,7 +17,8 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
 # Build arguments
-ARG MONGODB_URI
+ARG MONGODB_URI=mongodb://placeholder:placeholder@placeholder:27017/placeholder
+ENV MONGODB_URI=$MONGODB_URI
 
 # Build the application
 RUN npm run build

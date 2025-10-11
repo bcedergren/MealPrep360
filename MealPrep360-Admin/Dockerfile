@@ -8,7 +8,7 @@ WORKDIR /app
 
 # Copy package files
 COPY package*.json ./
-RUN npm ci
+RUN npm install --production=false
 
 # Rebuild the source code only when needed
 FROM base AS builder
@@ -17,9 +17,9 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
 # Build arguments for environment variables
-ARG NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
-ARG NEXT_PUBLIC_API_URL
-ARG SERVER_API_URL
+ARG NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_placeholder
+ARG NEXT_PUBLIC_API_URL=http://placeholder
+ARG SERVER_API_URL=http://placeholder
 
 # Set environment variables for build
 ENV NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=$NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY

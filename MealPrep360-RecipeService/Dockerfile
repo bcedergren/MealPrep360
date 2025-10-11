@@ -8,16 +8,7 @@ WORKDIR /app
 
 # Copy package files
 COPY package*.json ./
-RUN npm ci
-
-# Build the source code
-FROM base AS builder
-WORKDIR /app
-COPY --from=deps /app/node_modules ./node_modules
-COPY . .
-
-# Build TypeScript
-RUN npm run build
+RUN npm install --production=false
 
 # Production image
 FROM base AS runner
@@ -28,10 +19,10 @@ ENV NODE_ENV=production
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nodeuser
 
-# Copy built application
-COPY --from=builder --chown=nodeuser:nodejs /app/dist ./dist
-COPY --from=builder --chown=nodeuser:nodejs /app/node_modules ./node_modules
-COPY --from=builder --chown=nodeuser:nodejs /app/package*.json ./
+# Copy dependencies and pre-built dist
+COPY --from=deps --chown=nodeuser:nodejs /app/node_modules ./node_modules
+COPY --chown=nodeuser:nodejs ./dist ./dist
+COPY --chown=nodeuser:nodejs ./package*.json ./
 
 USER nodeuser
 
