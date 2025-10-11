@@ -30,7 +30,7 @@ jobs:
       uses: actions/checkout@v4
 
     - name: Initialize CodeQL
-      uses: github/codeql-action/init@v2
+      uses: github/codeql-action/init@v4
       with:
         languages: ${{ matrix.language }}
 
@@ -53,7 +53,7 @@ jobs:
         cd ../websocket-server && npm ci
 
     - name: Perform CodeQL Analysis
-      uses: github/codeql-action/analyze@v2
+      uses: github/codeql-action/analyze@v4
 
   # ==========================================
   # Dependency Vulnerability Scan
@@ -216,7 +216,7 @@ jobs:
         output: 'trivy-results-${{ matrix.service.name }}.sarif'
 
     - name: Upload Trivy scan results to GitHub Security tab
-      uses: github/codeql-action/upload-sarif@v2
+      uses: github/codeql-action/upload-sarif@v4
       with:
         sarif_file: 'trivy-results-${{ matrix.service.name }}.sarif'
 
