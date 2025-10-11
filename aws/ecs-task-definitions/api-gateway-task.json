@@ -1,0 +1,108 @@
+{
+  "family": "mealprep360-api-gateway",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": ["FARGATE"],
+  "cpu": "1024",
+  "memory": "2048",
+  "executionRoleArn": "arn:aws:iam::ACCOUNT_ID:role/ecsTaskExecutionRole",
+  "taskRoleArn": "arn:aws:iam::ACCOUNT_ID:role/ecsTaskRole",
+  "containerDefinitions": [
+    {
+      "name": "api-gateway",
+      "image": "ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com/mealprep360/api-gateway:latest",
+      "cpu": 1024,
+      "memory": 2048,
+      "essential": true,
+      "portMappings": [
+        {
+          "containerPort": 3001,
+          "protocol": "tcp"
+        }
+      ],
+      "environment": [
+        {
+          "name": "NODE_ENV",
+          "value": "production"
+        },
+        {
+          "name": "PORT",
+          "value": "3001"
+        },
+        {
+          "name": "RECIPE_SERVICE_URL",
+          "value": "http://recipe-service.mealprep360.local:3002"
+        },
+        {
+          "name": "MEALPLAN_SERVICE_URL",
+          "value": "http://mealplan-service.mealprep360.local:3003"
+        },
+        {
+          "name": "SHOPPING_SERVICE_URL",
+          "value": "http://shopping-service.mealprep360.local:3004"
+        },
+        {
+          "name": "SOCIAL_SERVICE_URL",
+          "value": "http://social-service.mealprep360.local:3005"
+        },
+        {
+          "name": "BLOG_SERVICE_URL",
+          "value": "http://blog-service.mealprep360.local:3006"
+        },
+        {
+          "name": "WEBSOCKET_SERVICE_URL",
+          "value": "http://websocket-server.mealprep360.local:3007"
+        }
+      ],
+      "secrets": [
+        {
+          "name": "MONGODB_URI",
+          "valueFrom": "arn:aws:secretsmanager:us-east-1:ACCOUNT_ID:secret:mealprep360/mongodb-uri"
+        },
+        {
+          "name": "REDIS_URL",
+          "valueFrom": "arn:aws:secretsmanager:us-east-1:ACCOUNT_ID:secret:mealprep360/redis-url"
+        },
+        {
+          "name": "RECIPE_SERVICE_API_KEY",
+          "valueFrom": "arn:aws:secretsmanager:us-east-1:ACCOUNT_ID:secret:mealprep360/recipe-api-key"
+        },
+        {
+          "name": "MEALPLAN_SERVICE_API_KEY",
+          "valueFrom": "arn:aws:secretsmanager:us-east-1:ACCOUNT_ID:secret:mealprep360/mealplan-api-key"
+        },
+        {
+          "name": "SHOPPING_SERVICE_API_KEY",
+          "valueFrom": "arn:aws:secretsmanager:us-east-1:ACCOUNT_ID:secret:mealprep360/shopping-api-key"
+        },
+        {
+          "name": "SOCIAL_SERVICE_API_KEY",
+          "valueFrom": "arn:aws:secretsmanager:us-east-1:ACCOUNT_ID:secret:mealprep360/social-api-key"
+        },
+        {
+          "name": "BLOG_SERVICE_API_KEY",
+          "valueFrom": "arn:aws:secretsmanager:us-east-1:ACCOUNT_ID:secret:mealprep360/blog-api-key"
+        },
+        {
+          "name": "WEBSOCKET_SERVICE_API_KEY",
+          "valueFrom": "arn:aws:secretsmanager:us-east-1:ACCOUNT_ID:secret:mealprep360/websocket-api-key"
+        }
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/mealprep360/api",
+          "awslogs-region": "us-east-1",
+          "awslogs-stream-prefix": "ecs"
+        }
+      },
+      "healthCheck": {
+        "command": ["CMD-SHELL", "curl -f http://localhost:3001/api/health || exit 1"],
+        "interval": 30,
+        "timeout": 5,
+        "retries": 3,
+        "startPeriod": 60
+      }
+    }
+  ]
+}
+

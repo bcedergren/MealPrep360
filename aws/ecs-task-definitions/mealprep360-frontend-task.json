@@ -1,0 +1,45 @@
+{
+  "family": "mealprep360-frontend",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": ["FARGATE"],
+  "cpu": "512",
+  "memory": "1024",
+  "executionRoleArn": "arn:aws:iam::588443559352:role/mealprep360-ecs-ECSTaskExecutionRole-1VLaotrBGoYd",
+  "taskRoleArn": "arn:aws:iam::588443559352:role/mealprep360-ecs-ECSTaskRole-Pr5Me0JoBkuP",
+  "containerDefinitions": [
+    {
+      "name": "frontend",
+      "image": "588443559352.dkr.ecr.us-east-1.amazonaws.com/mealprep360/frontend:latest",
+      "cpu": 512,
+      "memory": 1024,
+      "essential": true,
+      "portMappings": [
+        {
+          "containerPort": 3000,
+          "protocol": "tcp"
+        }
+      ],
+      "environment": [
+        {"name": "NODE_ENV", "value": "production"},
+        {"name": "PORT", "value": "3000"}
+      ],
+      "secrets": [
+        {"name": "MONGODB_URI", "valueFrom": "arn:aws:secretsmanager:us-east-1:588443559352:secret:mealprep360/mongodb-uri"},
+        {"name": "REDIS_URL", "valueFrom": "arn:aws:secretsmanager:us-east-1:588443559352:secret:mealprep360/redis-url"},
+        {"name": "JWT_SECRET", "valueFrom": "arn:aws:secretsmanager:us-east-1:588443559352:secret:mealprep360/jwt-secret"},
+        {"name": "CLERK_SECRET_KEY", "valueFrom": "arn:aws:secretsmanager:us-east-1:588443559352:secret:mealprep360/clerk-secret-key"},
+        {"name": "NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY", "valueFrom": "arn:aws:secretsmanager:us-east-1:588443559352:secret:mealprep360/clerk-publishable-key"}
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-create-group": "true",
+          "awslogs-group": "/ecs/mealprep360/frontend",
+          "awslogs-region": "us-east-1",
+          "awslogs-stream-prefix": "ecs"
+        }
+      }
+    }
+  ]
+}
+

@@ -1,0 +1,3 @@
+source_ingredient_id,target_ingredient_id,constraint_json
+ing_chicken_breast,ing_chicken_thigh,"{""price_delta_pct"": -10, ""protein_delta_pct"": -10}"
+ing_ground_beef_90,ing_ground_beef_80,"{""price_delta_pct"": -10, ""fat_delta_pct"": 10}"

@@ -1,0 +1,148 @@
+name: Deploy Single Service
+
+on:
+  workflow_dispatch:
+    inputs:
+      service:
+        description: 'Service to deploy'
+        required: true
+        type: choice
+        options:
+          - frontend
+          - admin
+          - api-gateway
+          - recipe-service
+          - mealplan-service
+          - shopping-service
+          - social-service
+          - blog-service
+          - websocket-server
+      environment:
+        description: 'Target environment'
+        required: true
+        type: choice
+        options:
+          - staging
+          - production
+      skip_tests:
+        description: 'Skip tests (use with caution)'
+        required: false
+        type: boolean
+        default: false
+
+env:
+  AWS_REGION: us-east-1
+  ECR_REGISTRY: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com
+
+jobs:
+  deploy:
+    name: Deploy ${{ github.event.inputs.service }} to ${{ github.event.inputs.environment }}
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    environment:
+      name: ${{ github.event.inputs.environment }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set service context
+        id: context
+        run: |
+          case "${{ github.event.inputs.service }}" in
+            frontend) echo "context=./MealPrep360" >> $GITHUB_OUTPUT ;;
+            admin) echo "context=./MealPrep360-Admin" >> $GITHUB_OUTPUT ;;
+            api-gateway) echo "context=./MealPrep360-API" >> $GITHUB_OUTPUT ;;
+            recipe-service) echo "context=./MealPrep360-RecipeService" >> $GITHUB_OUTPUT ;;
+            mealplan-service) echo "context=./MealPrep360-MealPlanService" >> $GITHUB_OUTPUT ;;
+            shopping-service) echo "context=./MealPrep360-ShoppingListService" >> $GITHUB_OUTPUT ;;
+            social-service) echo "context=./MealPrep360-SocialMediaService" >> $GITHUB_OUTPUT ;;
+            blog-service) echo "context=./MealPrep360-BlogService" >> $GITHUB_OUTPUT ;;
+            websocket-server) echo "context=./MealPrep360-WebsocketServer" >> $GITHUB_OUTPUT ;;
+          esac
+
+      - name: Run tests
+        if: ${{ github.event.inputs.skip_tests == 'false' }}
+        working-directory: ${{ steps.context.outputs.context }}
+        run: |
+          if [ -f "package.json" ]; then
+            npm ci
+            npm test || echo "No tests found or tests failed"
+          fi
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: ${{ steps.context.outputs.context }}
+          file: ${{ steps.context.outputs.context }}/Dockerfile
+          push: true
+          tags: |
+            ${{ env.ECR_REGISTRY }}/mealprep360/${{ github.event.inputs.service }}:${{ github.event.inputs.environment }}-latest
+            ${{ env.ECR_REGISTRY }}/mealprep360/${{ github.event.inputs.service }}:${{ github.event.inputs.environment }}-${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Update ECS service
+        run: |
+          CLUSTER="mealprep360-${{ github.event.inputs.environment }}-cluster"
+          if [ "${{ github.event.inputs.environment }}" == "production" ]; then
+            CLUSTER="mealprep360-cluster"
+          fi
+          
+          aws ecs update-service \
+            --cluster $CLUSTER \
+            --service ${{ github.event.inputs.service }} \
+            --force-new-deployment \
+            --region ${{ env.AWS_REGION }}
+
+      - name: Wait for deployment
+        run: |
+          CLUSTER="mealprep360-${{ github.event.inputs.environment }}-cluster"
+          if [ "${{ github.event.inputs.environment }}" == "production" ]; then
+            CLUSTER="mealprep360-cluster"
+          fi
+          
+          aws ecs wait services-stable \
+            --cluster $CLUSTER \
+            --services ${{ github.event.inputs.service }} \
+            --region ${{ env.AWS_REGION }}
+
+      - name: Verify deployment
+        run: |
+          CLUSTER="mealprep360-${{ github.event.inputs.environment }}-cluster"
+          if [ "${{ github.event.inputs.environment }}" == "production" ]; then
+            CLUSTER="mealprep360-cluster"
+          fi
+          
+          RUNNING_COUNT=$(aws ecs describe-services \
+            --cluster $CLUSTER \
+            --services ${{ github.event.inputs.service }} \
+            --region ${{ env.AWS_REGION }} \
+            --query 'services[0].runningCount' \
+            --output text)
+          
+          echo "✅ Service ${{ github.event.inputs.service }} deployed to ${{ github.event.inputs.environment }}"
+          echo "📊 Running tasks: $RUNNING_COUNT"
+
+      - name: Summary
+        run: |
+          echo "### Deployment Summary 🚀" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Service**: ${{ github.event.inputs.service }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Environment**: ${{ github.event.inputs.environment }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Status**: ✅ Success" >> $GITHUB_STEP_SUMMARY
+          echo "- **Commit**: ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+

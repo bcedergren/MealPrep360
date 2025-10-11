@@ -1,0 +1,67 @@
+Project,Issue Type,Summary,Description,Priority,Labels,Epic Link,Components,Story Points,Assignee,Dependencies,Acceptance Criteria
+MP360,Epic,[EPIC] Batch Day v1 (end-to-end),Parent epic for Batch Day v1 (end-to-end).,Highest,epic,EPIC-BatchDayV1,platform,,,,
+MP360,Epic,[EPIC] Pack-Size Cart Optimizer,Parent epic for Pack-Size Cart Optimizer.,Highest,epic,EPIC-Optimizer,platform,,,,
+MP360,Epic,[EPIC] QR Labels & Scanning,Parent epic for QR Labels & Scanning.,Highest,epic,EPIC-QRLabels,platform,,,,
+MP360,Epic,[EPIC] Freezer Inventory & State Machine,Parent epic for Freezer Inventory & State Machine.,Highest,epic,EPIC-Freezer,platform,,,,
+MP360,Epic,[EPIC] Thaw Scheduler & Notifications,Parent epic for Thaw Scheduler & Notifications.,Highest,epic,EPIC-Thaw,platform,,,,
+MP360,Epic,[EPIC] Pantry Check & Smart List,Parent epic for Pantry Check & Smart List.,Highest,epic,EPIC-Pantry,platform,,,,
+MP360,Epic,[EPIC] AWS Infra Bootstrap & Hardening,Parent epic for AWS Infra Bootstrap & Hardening.,Highest,epic,EPIC-Infra,platform,,,,
+MP360,Epic,[EPIC] Observability & Alarms,Parent epic for Observability & Alarms.,Highest,epic,EPIC-Obs,platform,,,,
+MP360,Epic,[EPIC] Security & Compliance,Parent epic for Security & Compliance.,Highest,epic,EPIC-Sec,platform,,,,
+MP360,Epic,[EPIC] Analytics & KPIs,Parent epic for Analytics & KPIs.,Highest,epic,EPIC-Analytics,platform,,,,
+MP360,Epic,[EPIC] Web App UX & Routes,Parent epic for Web App UX & Routes.,Highest,epic,EPIC-Web,platform,,,,
+MP360,Epic,[EPIC] DB Migrations & Seed,Parent epic for DB Migrations & Seed.,Highest,epic,EPIC-Data,platform,,,,
+MP360,Epic,[EPIC] CI/CD & Environments,Parent epic for CI/CD & Environments.,Highest,epic,EPIC-CICD,platform,,,,
+MP360,Story,Batch Day wizard (plan → optimize → labels),Implement 3-step wizard: targets input → show plan summary → Optimize Cart and Print Labels actions.,High,batchday frontend,EPIC-BatchDayV1,web,5,,,"- Users can progress through steps
+- Optimize and Print buttons wired to API"
+MP360,Story,Batch Day: printable run sheet,Generate a printable prep run sheet with timings and equipment notes.,High,batchday printable,EPIC-BatchDayV1,web api,3,,,"- Printable A4/Letter version
+- Includes recipe order, thaw notes"
+MP360,Story,Endpoint: POST /v1/cart/optimize,"Implement greedy+repair optimizer with max_stores constraint; return lines, subtotals, leftover%.",High,optimizer backend,EPIC-Optimizer,api,8,,,"- Returns optimized cart <= configured stores
+- Leftovers <= 15% on seed plan"
+MP360,Story,Substitution clusters & diet-safe rules,"Apply substitution clusters with tags (e.g., gluten-free) and price deltas.",High,optimizer substitutions,EPIC-Optimizer,api,5,,,"- Substitutions respect diet tags
+- Unit tests with sample data"
+MP360,Story,SQS job: optimize queue,Offload long optimizer runs to SQS consumer; support Idempotency-Key.,High,sqs optimizer,EPIC-Optimizer,worker infra,3,,,- Jobs processed; retries to DLQ on failure
+MP360,Story,Endpoint: POST /v1/labels/print,Generate Avery 5160 PDF with QR codes; upload to S3; return presigned URL.,High,labels pdf s3,EPIC-QRLabels,api lambda,5,,,"- PDF prints correctly on Avery 5160
+- URL expires in <= 15 min"
+MP360,Story,Lambda: labels PDF generator,Python Lambda using reportlab + qrcode to create PDF assets.,High,labels pdf,EPIC-QRLabels,lambda,3,,,
+MP360,Story,Mobile scan page (PWA),Web page with camera QR scanner; posts to /v1/scan with action and label_code.,High,scanner frontend,EPIC-QRLabels,web,5,,,"- Works on iOS/Android
+- Offline queue with idempotency retry"
+MP360,Story,Endpoint: POST /v1/scan (state transitions),Advance MealUnit states: planned→prepped→frozen→thawed→consumed/discarded with validation.,High,freezer state-machine,EPIC-Freezer,api,5,,,"- Illegal transitions rejected
+- Events emitted"
+MP360,Story,"Freezer view (location, badges, quick actions)",UI list of MealUnits with filters by state/location; quick actions thaw/consume/discard.,High,freezer frontend,EPIC-Freezer,web,5,,,
+MP360,Story,Label resolve by code,Resolve MealUnit from short label_code; ensure uniqueness and index.,High,labels freezer,EPIC-Freezer,api db,2,,,
+MP360,Story,Thaw windows by protein type,Policy table for conservative thaw windows; compute consume_by on thaw.,High,thaw,EPIC-Thaw,api db,3,,,
+MP360,Story,Daily EventBridge → scheduler Lambda,EventBridge rule triggers Lambda to push thaw tasks to SNS.,High,eventbridge sns,EPIC-Thaw,lambda infra,3,,,
+MP360,Story,Push notifications plumbing,Collect device tokens (FCM/APNs); send push on thaw tasks due.,High,push notifications,EPIC-Thaw,api web,5,,,
+MP360,Story,Endpoint: POST /v1/pantry/check,Reconcile on-hand inventory; subtract from demand before optimization.,High,pantry optimizer,EPIC-Pantry,api,3,,,
+MP360,Story,Smart Shopping List integration,"Merge optimizer output into existing smart list UI; show packs, leftovers, store split.",High,shopping-list frontend,EPIC-Pantry,web,5,,,
+MP360,Task,"CLI: create_network.sh (VPC, subnets, SGs)","Script to create VPC, 3 public + 3 private subnets, and security groups for ALB/API/RDS/Redis.",High,aws-cli networking,EPIC-Infra,infra,3,,,
+MP360,Task,"CLI: create_data_plane.sh (S3, SQS DLQs, RDS, Redis)","Script to provision buckets, queues with redrive, Multi-AZ Postgres, and ElastiCache.",High,aws-cli dataplane,EPIC-Infra,infra,5,,,
+MP360,Task,"CLI: create_app_plane.sh (ECS, ALB, WAF association)","Script to provision ECS cluster, ALB, TG, listener; optional WAF association.",High,aws-cli alb ecs,EPIC-Infra,infra,3,,,
+MP360,Task,CLI: wire_scheduler.sh (EventBridge→Lambda),Wire daily cron rule to scheduler Lambda target.,High,aws-cli eventbridge,EPIC-Infra,infra,1,,,
+MP360,Story,Tracing via OpenTelemetry,Instrument API and worker; export to CloudWatch/Datadog.,High,otel observability,EPIC-Obs,api worker,3,,,
+MP360,Task,"CloudWatch alarms (API p95, 5xx, DLQ depth, Lambda errors, RDS CPU)",Create metric alarms and notify via SNS/email.,High,cloudwatch alarms,EPIC-Obs,infra,3,,,
+MP360,Story,Structured event logging to Firehose→S3,"Emit business events (label_printed, label_scanned, cart_optimized, meal_thawed/consumed).",High,analytics events,EPIC-Obs,api worker,3,,,
+MP360,Story,WAF rules + rate limit /scan,Attach WAF; add SQLi/XSS rules; rate-limit scanning endpoint.,High,waf security,EPIC-Sec,infra api,3,,,
+MP360,Story,Secrets Manager integration,Move DB/Redis/JWT secrets to AWS Secrets Manager; rotate on deploy.,High,secrets security,EPIC-Sec,infra api,3,,,
+MP360,Story,"TLS, HSTS, CSP headers","Ensure TLS 1.2+, HSTS and CSP headers served at edge/app.",High,security headers,EPIC-Sec,web infra,2,,,
+MP360,Task,Athena database + partitions,Create Athena DB and external tables over S3 events; partition by day.,High,athena analytics,EPIC-Analytics,infra,3,,,
+MP360,Story,Weekly KPI query + dashboard,"Query: cost/serving, leftover%, label scan compliance, runway days; QuickSight or simple CSV export.",High,kpi dashboard,EPIC-Analytics,infra api,3,,,
+MP360,Story,"Nav: add Batch Day, Print Labels, Scan, Freezer",Expose new routes visibly in main navigation.,High,frontend navigation,EPIC-Web,web,2,,,
+MP360,Story,Landing copy refresh,"Update hero/USPs with prep-to-freezer, QR labels, thaw reminders.",High,copy,EPIC-Web,web marketing,1,,,
+MP360,Story,Notification permission & token registration,Collect FCM/APNs tokens and associate with user account.,High,push,EPIC-Web,web api,3,,,
+MP360,Story,DB migrations: core tables + indexes,"Create Ingredient, Product, RecipeIngredient, MealUnit, Label, SubstitutionRule, Event tables and indexes.",High,migrations,EPIC-Data,db,5,,,
+MP360,Story,Seed CSV importer,CLI to ingest ingredients/products/substitutions/recipes from CSV.,High,seed,EPIC-Data,api db,3,,,
+MP360,Story,Units normalization (units.json),Canonical unit conversions and density support for optimizer & pantry.,High,units,EPIC-Data,api,3,,,
+MP360,Task,GitHub Actions: build & push to ECR,CI pipeline builds API/worker images and pushes to env-specific ECR repos.,High,ci ecr,EPIC-CICD,devops,3,,,
+MP360,Task,ECS service deploy (blue/green),Add deploy job to update ECS services with new task definition revisions.,High,ecs deploy,EPIC-CICD,devops infra,5,,,
+MP360,Task,DB migrations in pipeline,Run migrations automatically on deploy with rollback guard.,High,migrations ci,EPIC-CICD,devops db,3,,,
+MP360,Story,Short label_code generator with collision checks,Server-side generator for compact human-friendly codes; unique index on label.code.,High,labels,EPIC-QRLabels,api db,2,,,
+MP360,Story,Missed-thaw fallback flow,"If thaw window missed, suggest cook-from-frozen or reschedule; update state accordingly.",High,thaw ux,EPIC-Freezer,api web,3,,,
+MP360,Story,Club mode tuning,Heuristics for large pack sizes; leftover reduction pass.,High,optimizer,EPIC-Optimizer,api,3,,,
+MP360,Story,Idempotency middleware,Middleware enforcing Idempotency-Key on mutating endpoints with Redis TTL.,High,idempotency,EPIC-Obs,api,3,,,
+MP360,Task,PII audit for labels/QR,Ensure no PII encoded; document policy in repo.,High,privacy,EPIC-Sec,security api,1,,,
+MP360,Story,Label scan funnel,Measure label_printed→scan rate; alert if compliance <80%.,High,analytics kpi,EPIC-Analytics,api infra,2,,,
+MP360,Task,Cost guardrails,Budgets + alerts at 50/80/100%; tag resources by env; enable S3 lifecycles.,High,cost,EPIC-Infra,infra finops,2,,,
+MP360,Story,Offline queue for scans,Queue POST /scan while offline; flush with idempotency when online.,High,pwa offline,EPIC-Web,web,3,,,
+MP360,Story,Recipe→MealUnits materialization,Batch generation creates meal units with sequential label codes and locations.,High,batchday,EPIC-Data,api db,3,,,

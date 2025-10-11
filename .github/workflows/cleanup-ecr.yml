@@ -1,0 +1,64 @@
+name: Cleanup ECR Images
+
+on:
+  schedule:
+    # Run every Sunday at 2 AM UTC
+    - cron: '0 2 * * 0'
+  workflow_dispatch:
+
+env:
+  AWS_REGION: us-east-1
+
+jobs:
+  cleanup:
+    name: Cleanup Old ECR Images
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Cleanup old images
+        run: |
+          REPOSITORIES=(
+            "mealprep360/frontend"
+            "mealprep360/admin"
+            "mealprep360/api-gateway"
+            "mealprep360/recipe-service"
+            "mealprep360/mealplan-service"
+            "mealprep360/shopping-service"
+            "mealprep360/social-service"
+            "mealprep360/blog-service"
+            "mealprep360/websocket-server"
+          )
+          
+          for repo in "${REPOSITORIES[@]}"; do
+            echo "Cleaning up $repo..."
+            
+            # Keep only the last 10 images, delete older ones
+            image_ids=$(aws ecr describe-images \
+              --repository-name $repo \
+              --region ${{ env.AWS_REGION }} \
+              --query 'sort_by(imageDetails,& imagePushedAt)[:-10].[imageDigest]' \
+              --output text)
+            
+            if [ ! -z "$image_ids" ]; then
+              for image_id in $image_ids; do
+                echo "Deleting image: $image_id from $repo"
+                aws ecr batch-delete-image \
+                  --repository-name $repo \
+                  --image-ids imageDigest=$image_id \
+                  --region ${{ env.AWS_REGION }} || true
+              done
+            else
+              echo "No images to delete in $repo"
+            fi
+          done
+          
+          echo "✅ ECR cleanup completed"
+

@@ -1,0 +1,36 @@
+Title,Body,Labels,Sprint,Story Points,Due Date
+Create Feature Branch,Run `git checkout -b feature/batch-day-core` to start new development branch.,"setup,git",Sprint 1,1,2025-10-27
+Add Planning Service,"Extract `services/planning-service/` from refactor_bundle.zip or scaffold manually.
+Install dependencies: `npm ci`
+Add `/healthz` endpoint and test with `curl -s localhost:4010/healthz`.
+Deploy via K8s.","backend,planning-service",Sprint 1,5,2025-10-27
+Update API Gateway Routes,"Proxy new endpoints:
+- POST /planning/plan → planning-service
+- POST /planning/smart-list → planning-service
+Stub:
+- POST /optimizer/cart
+- POST /labels/print
+- POST /freezer/scan","gateway,api",Sprint 1,3,2025-10-27
+Frontend Batch Day Flow,"Create hidden `/batch-day` page using template.
+Guard behind feature flag.
+Connect endpoints and render results.","frontend,ui",Sprint 1,5,2025-10-27
+Implement Stubs for Optimizer/Label/Freezer,"Add minimal handlers returning canned success responses to unblock UI.
+Replace with real services in Sprint 2.","backend,stubs",Sprint 1,2,2025-10-27
+Wire Content Service,"Extract `services/content-service/` from content_service_bundle_full.zip.
+Start API (`npm run dev`) and worker (`npm run worker`).
+Add routes:
+- POST /content/blog/outline
+- POST /content/blog/draft
+- GET /content/jobs/:id","backend,content-service,ai",Sprint 2,5,2025-11-10
+Observability Setup,"Ensure `/healthz` endpoints exist.
+Add request logging and latency tracking.
+Configure log alerts for 5xx errors and latency spikes.","infra,monitoring",Sprint 2,3,2025-11-10
+Security Enhancements,"Verify Clerk JWT at gateway and service layers.
+Add NetworkPolicies to restrict inter-service traffic.
+Rate-limit hot endpoints.","security,infra",Sprint 2,3,2025-11-10
+CI/CD Workflow Updates,"Add GitHub Actions workflows for new services.
+Set `GHCR_PAT` secret for image publishing.
+Ensure build/test/deploy passes.","infra,ci-cd",Sprint 2,2,2025-11-10
+Dev Validation and Rollout Plan,"Validate all endpoints in dev.
+Deploy to staging.
+Feature-flag Batch Day in prod for internal testing.","testing,deployment",Sprint 2,4,2025-11-10

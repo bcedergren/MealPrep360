@@ -1,0 +1,292 @@
+# Docker Compose for MealPrep360 - Development Environment
+# =======================================================
+# This is a simplified development version without Nginx
+
+services:
+  # ==========================================
+  # Frontend Services
+  # ==========================================
+
+  # Main Frontend Application
+  frontend:
+    build:
+      context: ./MealPrep360
+      dockerfile: Dockerfile
+      args:
+        MONGODB_URI: ${MONGODB_URI}
+        NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: ${NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY}
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:3001}
+        NEXT_PUBLIC_WS_URL: ${NEXT_PUBLIC_WS_URL:-ws://localhost:3007}
+    ports:
+      - '3000:3000'
+    environment:
+      - NODE_ENV=development
+      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-http://localhost:3001}
+      - NEXT_PUBLIC_WS_URL=${NEXT_PUBLIC_WS_URL:-ws://localhost:3007}
+      - SERVER_API_URL=${SERVER_API_URL:-http://api-gateway:3001}
+      - NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=${NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY}
+      - CLERK_PUBLISHABLE_KEY=${NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY}
+      - PORT=3000
+    env_file:
+      - .env
+    depends_on:
+      - api-gateway
+      - websocket-server
+    restart: unless-stopped
+    networks:
+      - mealprep360-network
+
+  # Admin Panel
+  admin:
+    build:
+      context: ./MealPrep360-Admin
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: ${NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY}
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:3001}
+        SERVER_API_URL: ${SERVER_API_URL:-http://api-gateway:3001}
+    ports:
+      - '3008:3008'
+    environment:
+      - NODE_ENV=development
+      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-http://localhost:3001}
+      - SERVER_API_URL=${SERVER_API_URL:-http://api-gateway:3001}
+      - NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=${NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY}
+      - CLERK_PUBLISHABLE_KEY=${NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY}
+      - PORT=3008
+    env_file:
+      - .env
+    depends_on:
+      - api-gateway
+    restart: unless-stopped
+    networks:
+      - mealprep360-network
+
+  # ==========================================
+  # API Gateway
+  # ==========================================
+
+  api-gateway:
+    build:
+      context: ./MealPrep360-API
+      dockerfile: Dockerfile
+    ports:
+      - '3001:3001'
+    environment:
+      - NODE_ENV=development
+      - MONGODB_URI=mongodb://${MONGO_ROOT_USERNAME}:${MONGO_ROOT_PASSWORD}@mongodb:27017/mealprep360_dev?authSource=admin
+      - REDIS_URL=redis://redis:6379
+      - PORT=3001
+      - RECIPE_SERVICE_URL=http://recipe-service:3002
+      - MEALPLAN_SERVICE_URL=http://mealplan-service:3003
+      - SHOPPING_SERVICE_URL=http://shopping-service:3004
+      - SOCIAL_SERVICE_URL=http://social-service:3005
+      - BLOG_SERVICE_URL=http://blog-service:3006
+      - WEBSOCKET_SERVICE_URL=http://websocket-server:3007
+      - RECIPE_SERVICE_API_KEY=${RECIPE_SERVICE_API_KEY}
+      - MEALPLAN_SERVICE_API_KEY=${MEALPLAN_SERVICE_API_KEY}
+      - SHOPPING_SERVICE_API_KEY=${SHOPPING_SERVICE_API_KEY}
+      - SOCIAL_SERVICE_API_KEY=${SOCIAL_SERVICE_API_KEY}
+      - BLOG_SERVICE_API_KEY=${BLOG_SERVICE_API_KEY}
+      - WEBSOCKET_SERVICE_API_KEY=${WEBSOCKET_SERVICE_API_KEY}
+    env_file:
+      - .env
+    depends_on:
+      - mongodb
+      - redis
+      - recipe-service
+      - mealplan-service
+      - shopping-service
+      - social-service
+      - blog-service
+    restart: unless-stopped
+    networks:
+      - mealprep360-network
+    volumes:
+      - ./MealPrep360-API:/app
+      - /app/node_modules
+
+  # ==========================================
+  # Microservices
+  # ==========================================
+
+  recipe-service:
+    build:
+      context: ./MealPrep360-RecipeService
+      dockerfile: Dockerfile
+    ports:
+      - '3002:3002'
+    environment:
+      - NODE_ENV=development
+      - MONGODB_URI=mongodb://${MONGO_ROOT_USERNAME}:${MONGO_ROOT_PASSWORD}@mongodb:27017/mealprep360_dev?authSource=admin
+      - REDIS_URL=redis://redis:6379
+      - API_KEY=${RECIPE_SERVICE_API_KEY}
+      - PORT=3002
+    env_file:
+      - .env
+    depends_on:
+      - mongodb
+    restart: unless-stopped
+    networks:
+      - mealprep360-network
+    volumes:
+      - ./MealPrep360-RecipeService:/app
+      - /app/node_modules
+
+  mealplan-service:
+    build:
+      context: ./MealPrep360-MealPlanService
+      dockerfile: Dockerfile
+    ports:
+      - '3003:3003'
+    environment:
+      - NODE_ENV=development
+      - MONGODB_URI=mongodb://${MONGO_ROOT_USERNAME}:${MONGO_ROOT_PASSWORD}@mongodb:27017/mealprep360_dev?authSource=admin
+      - API_KEY=${MEALPLAN_SERVICE_API_KEY}
+      - API_TOKEN=${MEALPLAN_SERVICE_API_KEY}
+      - PORT=3003
+    env_file:
+      - .env
+    depends_on:
+      - mongodb
+    restart: unless-stopped
+    networks:
+      - mealprep360-network
+    volumes:
+      - ./MealPrep360-MealPlanService:/app
+      - /app/node_modules
+
+  shopping-service:
+    build:
+      context: ./MealPrep360-ShoppingListService
+      dockerfile: Dockerfile
+    ports:
+      - '3004:3004'
+    environment:
+      - NODE_ENV=development
+      - MONGODB_URI=mongodb://${MONGO_ROOT_USERNAME}:${MONGO_ROOT_PASSWORD}@mongodb:27017/mealprep360_dev?authSource=admin
+      - API_KEY=${SHOPPING_SERVICE_API_KEY}
+      - PORT=3004
+    env_file:
+      - .env
+    depends_on:
+      - mongodb
+    restart: unless-stopped
+    networks:
+      - mealprep360-network
+    volumes:
+      - ./MealPrep360-ShoppingListService:/app
+      - /app/node_modules
+
+  social-service:
+    build:
+      context: ./MealPrep360-SocialMediaService
+      dockerfile: Dockerfile
+      args:
+        MONGODB_URI: 'mongodb://mongodb:27017/mealprep360_dev'
+    ports:
+      - '3005:3005'
+    environment:
+      - NODE_ENV=development
+      - MONGODB_URI=mongodb://${MONGO_ROOT_USERNAME}:${MONGO_ROOT_PASSWORD}@mongodb:27017/mealprep360_dev?authSource=admin
+      - API_KEY=${SOCIAL_SERVICE_API_KEY}
+      - PORT=3005
+    env_file:
+      - .env
+    depends_on:
+      - mongodb
+    restart: unless-stopped
+    networks:
+      - mealprep360-network
+    volumes:
+      - ./MealPrep360-SocialMediaService:/app
+      - /app/node_modules
+
+  blog-service:
+    build:
+      context: ./MealPrep360-BlogService
+      dockerfile: Dockerfile
+    ports:
+      - '3006:3006'
+    environment:
+      - NODE_ENV=development
+      - MONGODB_URI=mongodb://${MONGO_ROOT_USERNAME}:${MONGO_ROOT_PASSWORD}@mongodb:27017/mealprep360_dev?authSource=admin
+      - API_KEY=${BLOG_SERVICE_API_KEY}
+      - PORT=3006
+    env_file:
+      - .env
+    depends_on:
+      - mongodb
+    restart: unless-stopped
+    networks:
+      - mealprep360-network
+    volumes:
+      - ./MealPrep360-BlogService:/app
+      - /app/node_modules
+
+  websocket-server:
+    build:
+      context: ./MealPrep360-WebsocketServer
+      dockerfile: Dockerfile
+    ports:
+      - '3007:3007'
+    environment:
+      - NODE_ENV=development
+      - MONGODB_URI=mongodb://${MONGO_ROOT_USERNAME}:${MONGO_ROOT_PASSWORD}@mongodb:27017/mealprep360_dev?authSource=admin
+      - REDIS_URL=redis://redis:6379
+      - WEBSOCKET_API_KEY=${WEBSOCKET_SERVICE_API_KEY}
+      - JWT_SECRET=${JWT_SECRET}
+      - PORT=3007
+    env_file:
+      - .env
+    depends_on:
+      - mongodb
+      - redis
+    restart: unless-stopped
+    networks:
+      - mealprep360-network
+    volumes:
+      - ./MealPrep360-WebsocketServer:/app
+      - /app/node_modules
+
+  # ==========================================
+  # Data Layer
+  # ==========================================
+
+  mongodb:
+    image: mongo:6.0
+    ports:
+      - '27017:27017'
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=${MONGO_ROOT_USERNAME}
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_ROOT_PASSWORD}
+      - MONGO_INITDB_DATABASE=mealprep360_dev
+    volumes:
+      - mongodb_data:/data/db
+    restart: unless-stopped
+    networks:
+      - mealprep360-network
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - '6379:6379'
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+    networks:
+      - mealprep360-network
+
+volumes:
+  mongodb_data:
+    driver: local
+  redis_data:
+    driver: local
+
+networks:
+  mealprep360-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+

@@ -1,8 +1,6 @@
 # Docker Compose for MealPrep360 - Complete Application Stack
 # ===========================================================
 
-version: '3.8'
-
 services:
   # ==========================================
   # Frontend Services

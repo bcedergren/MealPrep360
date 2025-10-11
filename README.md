@@ -36,28 +36,57 @@ MealPrep360 is built as a modern microservices architecture with the following c
 
 ### Development Setup
 
-1. **Clone the repository**
+#### Option 1: Docker (Full Stack - Easiest)
+
+1. **Clone and start**
    ```bash
    git clone <repository-url>
    cd MealPrep360
+   docker compose up -d
    ```
 
-2. **Set up environment variables**
-   ```bash
-   cp .env.example .env.production
-   # Edit .env.production with your configuration
-   ```
-
-3. **Start the development environment**
-   ```bash
-   docker-compose up -d
-   ```
-
-4. **Access the applications**
+2. **Access the applications**
    - Frontend: http://localhost:3000
    - Admin Panel: http://localhost:3008
    - API Gateway: http://localhost:3001
-   - Monitoring: http://localhost:9090 (Prometheus)
+
+#### Option 2: Local Development (Best for Development)
+
+1. **Setup workspace**
+   ```bash
+   git clone <repository-url>
+   cd MealPrep360
+   npm install  # Installs all workspaces
+   ```
+
+2. **Run services**
+   ```bash
+   # Windows
+   .\scripts\dev-local.ps1
+   
+   # Mac/Linux
+   ./scripts/dev-local.sh
+   ```
+
+#### Option 3: VSCode Workspace (Best IDE Experience)
+
+1. **Open workspace**
+   ```bash
+   code MealPrep360.code-workspace
+   ```
+
+2. **Use integrated tasks and debugging**
+   - Press `Ctrl/Cmd + Shift + P` → "Tasks: Run Task"
+   - Select "Start All Services (Docker)" or any other task
+
+### 📚 Complete Workspace Guide
+
+See [WORKSPACE_SETUP.md](./WORKSPACE_SETUP.md) for detailed instructions on:
+- npm workspaces configuration
+- Running individual services
+- VSCode integration
+- Debugging setup
+- Troubleshooting
 
 ### Production Deployment
 

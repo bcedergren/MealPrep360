@@ -1,0 +1,11 @@
+recipe_id,ingredient_id,qty,unit,prep_notes,freezer_safe,cooked_state
+rc_sesame_chicken,ing_chicken_thigh,1800,g,trim excess fat,True,raw
+rc_sesame_chicken,ing_garlic,12,g,minced,True,raw
+rc_sesame_chicken,ing_onion,200,g,sliced,True,raw
+rc_beef_chili,ing_ground_beef_90,1000,g,brown lightly,True,parcooked
+rc_beef_chili,ing_onion,300,g,diced,True,raw
+rc_beef_chili,ing_garlic,12,g,minced,True,raw
+rc_beef_chili,ing_rice,200,g,cook separately day-of (optional),True,cooked
+rc_chicken_rice_bake,ing_chicken_breast,1200,g,cube,True,raw
+rc_chicken_rice_bake,ing_rice,400,g,parboil,True,parcooked
+rc_chicken_rice_bake,ing_onion,250,g,diced,True,raw

@@ -1,0 +1,198 @@
+{
+  "folders": [
+    {
+      "name": "🏠 Root",
+      "path": "."
+    },
+    {
+      "name": "🎨 Frontend",
+      "path": "MealPrep360"
+    },
+    {
+      "name": "⚙️ API Gateway",
+      "path": "MealPrep360-API"
+    },
+    {
+      "name": "🔧 Admin Panel",
+      "path": "MealPrep360-Admin"
+    },
+    {
+      "name": "🍳 Recipe Service",
+      "path": "MealPrep360-RecipeService"
+    },
+    {
+      "name": "📅 Meal Plan Service",
+      "path": "MealPrep360-MealPlanService"
+    },
+    {
+      "name": "🛒 Shopping Service",
+      "path": "MealPrep360-ShoppingListService"
+    },
+    {
+      "name": "👥 Social Service",
+      "path": "MealPrep360-SocialMediaService"
+    },
+    {
+      "name": "📝 Blog Service",
+      "path": "MealPrep360-BlogService"
+    },
+    {
+      "name": "🔌 WebSocket Server",
+      "path": "MealPrep360-WebsocketServer"
+    },
+    {
+      "name": "📱 Mobile App",
+      "path": "MealPrep360Mobile"
+    },
+    {
+      "name": "📚 Documentation",
+      "path": "Documents"
+    }
+  ],
+  "settings": {
+    "editor.formatOnSave": true,
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.codeActionsOnSave": {
+      "source.fixAll.eslint": "explicit"
+    },
+    "typescript.tsdk": "node_modules/typescript/lib",
+    "typescript.enablePromptUseWorkspaceTsdk": true,
+    "files.exclude": {
+      "**/node_modules": true,
+      "**/dist": true,
+      "**/.next": true,
+      "**/out": true,
+      "**/.vercel": true,
+      "**/coverage": true
+    },
+    "search.exclude": {
+      "**/node_modules": true,
+      "**/dist": true,
+      "**/.next": true,
+      "**/out": true,
+      "**/coverage": true,
+      "**/package-lock.json": true
+    },
+    "files.watcherExclude": {
+      "**/node_modules/**": true,
+      "**/dist/**": true,
+      "**/.next/**": true,
+      "**/out/**": true
+    },
+    "[typescript]": {
+      "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "[typescriptreact]": {
+      "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "[javascript]": {
+      "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "[json]": {
+      "editor.defaultFormatter": "esbenp.prettier-vscode"
+    }
+  },
+  "extensions": {
+    "recommendations": [
+      "dbaeumer.vscode-eslint",
+      "esbenp.prettier-vscode",
+      "bradlc.vscode-tailwindcss",
+      "ms-vscode.vscode-typescript-next",
+      "mongodb.mongodb-vscode",
+      "ms-azuretools.vscode-docker",
+      "eamodio.gitlens",
+      "usernamehw.errorlens",
+      "christian-kohler.path-intellisense",
+      "visualstudioexptteam.vscodeintellicode",
+      "orta.vscode-jest"
+    ]
+  },
+  "launch": {
+    "version": "0.2.0",
+    "configurations": [
+      {
+        "type": "node",
+        "request": "launch",
+        "name": "Debug Frontend",
+        "runtimeExecutable": "npm",
+        "runtimeArgs": ["run", "dev"],
+        "cwd": "${workspaceFolder}/MealPrep360",
+        "console": "integratedTerminal"
+      },
+      {
+        "type": "node",
+        "request": "launch",
+        "name": "Debug API Gateway",
+        "runtimeExecutable": "npm",
+        "runtimeArgs": ["run", "dev"],
+        "cwd": "${workspaceFolder}/MealPrep360-API",
+        "console": "integratedTerminal"
+      },
+      {
+        "type": "node",
+        "request": "launch",
+        "name": "Debug Recipe Service",
+        "runtimeExecutable": "npm",
+        "runtimeArgs": ["run", "dev"],
+        "cwd": "${workspaceFolder}/MealPrep360-RecipeService",
+        "console": "integratedTerminal"
+      }
+    ],
+    "compounds": [
+      {
+        "name": "Debug All Frontend Services",
+        "configurations": ["Debug Frontend", "Debug API Gateway"]
+      }
+    ]
+  },
+  "tasks": {
+    "version": "2.0.0",
+    "tasks": [
+      {
+        "label": "Start All Services (Docker)",
+        "type": "shell",
+        "command": "docker compose up -d",
+        "problemMatcher": [],
+        "group": {
+          "kind": "build",
+          "isDefault": true
+        }
+      },
+      {
+        "label": "Stop All Services (Docker)",
+        "type": "shell",
+        "command": "docker compose down",
+        "problemMatcher": []
+      },
+      {
+        "label": "View Docker Logs",
+        "type": "shell",
+        "command": "docker compose logs -f",
+        "problemMatcher": [],
+        "isBackground": true
+      },
+      {
+        "label": "Install All Dependencies",
+        "type": "shell",
+        "command": "npm install",
+        "problemMatcher": []
+      },
+      {
+        "label": "Build All Services",
+        "type": "shell",
+        "command": "npm run build:all",
+        "problemMatcher": [],
+        "group": "build"
+      },
+      {
+        "label": "Test All Services",
+        "type": "shell",
+        "command": "npm run test:all",
+        "problemMatcher": [],
+        "group": "test"
+      }
+    ]
+  }
+}
+
+
