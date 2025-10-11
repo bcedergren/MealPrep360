@@ -54,14 +54,56 @@ Requirements:
         
         user_prompt += """
 
-The recipe must be:
-1. Perfect for batch cooking and freezing
-2. Easy to reheat from frozen
-3. Family-friendly
-4. Made with commonly available ingredients
-5. Include detailed prep, storage, defrost, cooking, and serving instructions
+The recipe MUST include ALL of the following:
 
-Return a complete recipe matching the schema exactly."""
+**Required Fields:**
+1. Title (no season names!)
+2. Description (2-3 sentences about the dish)
+3. Summary (one sentence for preview cards)
+4. At least 6 ingredients with amounts and units
+5. Prep instructions (detailed steps for preparation)
+6. Main cooking instructions (step-by-step)
+7. Serving instructions (how to plate and serve)
+
+**Freezer-Specific:**
+8. Freezer prep instructions (how to prepare for freezing)
+9. Container suggestions (what containers to use)
+10. Defrost instructions (how to thaw safely)
+11. Storage time (how long it keeps frozen, in days)
+
+**Classification:**
+12. Category (e.g., "soup", "casserole", "pasta dish")
+13. Cuisine (e.g., "Italian", "Mexican", "American")
+14. Difficulty (easy, medium, or hard)
+15. Meal type (breakfast, lunch, dinner, or snacks)
+
+**Time & Servings:**
+16. Prep time (minutes)
+17. Cook time (minutes)
+18. Servings (number of people it serves)
+
+**Dietary & Allergen Info:**
+19. Dietary information (vegetarian, vegan, gluten-free, dairy-free, etc.)
+20. Allergen information (contains dairy, nuts, eggs, etc.)
+21. Tags (descriptive tags like "comfort food", "kid-friendly", etc.)
+
+**Nutrition (per serving):**
+22. Calories
+23. Protein (grams)
+24. Carbs (grams)
+25. Fat (grams)
+26. Fiber (grams)
+27. Sugar (grams)
+28. Sodium (milligrams)
+
+**Important Rules:**
+- All instruction arrays must have at least 3 detailed steps
+- Be specific with ingredient amounts
+- Include practical tips and notes
+- Make it family-friendly and approachable
+- Perfect for batch cooking and freezing
+
+Return a complete recipe matching the exact schema with ALL required fields."""
         
         return [
             {"role": "system", "content": self.chef_system},

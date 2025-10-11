@@ -55,24 +55,55 @@ class RecipeRequest(BaseModel):
             }
         }
 
+class Nutrition(BaseModel):
+    """Nutrition information"""
+    calories: Optional[int] = None
+    protein: Optional[float] = Field(None, description="Grams of protein")
+    carbs: Optional[float] = Field(None, description="Grams of carbohydrates")
+    fat: Optional[float] = Field(None, description="Grams of fat")
+    fiber: Optional[float] = Field(None, description="Grams of fiber")
+    sugar: Optional[float] = Field(None, description="Grams of sugar")
+    sodium: Optional[float] = Field(None, description="Milligrams of sodium")
+
 class Recipe(BaseModel):
-    """Complete recipe with all details"""
+    """Complete recipe with all details - matches MealPrep360 application schema"""
+    # Core fields
     title: str = Field(..., description="Recipe title (no season names)")
     description: str = Field(..., description="Brief description")
+    summary: str = Field(..., description="One-sentence summary for cards/previews")
+    
+    # Ingredients and instructions
     ingredients: List[Ingredient] = Field(..., min_length=3)
-    prep_instructions: List[str] = Field(..., alias="prepInstructions", min_length=1)
+    instructions: List[str] = Field(..., min_length=1, description="Main cooking instructions")
+    prep_instructions: List[str] = Field(..., alias="prepInstructions", min_length=1, description="Prep steps")
+    cooking_instructions: List[str] = Field(..., alias="cookingInstructions", min_length=1)
+    serving_instructions: List[str] = Field(..., alias="servingInstructions", min_length=1)
+    
+    # Freezer-specific instructions
+    freezer_prep: List[str] = Field(..., alias="freezerPrep", description="Freezer preparation steps")
+    defrost_instructions: List[str] = Field(..., alias="defrostInstructions")
+    container_suggestions: List[str] = Field(..., alias="containerSuggestions")
+    
+    # Time and servings
     prep_time: int = Field(..., alias="prepTime", ge=0, description="Prep time in minutes")
     cook_time: int = Field(..., alias="cookTime", ge=0, description="Cook time in minutes")
     servings: int = Field(..., ge=1, le=20)
-    tags: List[str] = Field(default_factory=list)
     storage_time: int = Field(..., alias="storageTime", ge=0, description="Freezer storage time in days")
-    container_suggestions: List[str] = Field(..., alias="containerSuggestions")
-    defrost_instructions: List[str] = Field(..., alias="defrostInstructions")
-    cooking_instructions: List[str] = Field(..., alias="cookingInstructions")
-    serving_instructions: List[str] = Field(..., alias="servingInstructions")
-    allergen_info: List[str] = Field(default_factory=list, alias="allergenInfo")
-    dietary_info: List[str] = Field(default_factory=list, alias="dietaryInfo")
+    
+    # Classification
+    category: str = Field(..., description="Recipe category (e.g., soup, casserole, pasta)")
+    cuisine: str = Field(..., description="Cuisine type (e.g., Italian, Mexican, American)")
+    difficulty: str = Field(..., pattern="^(easy|medium|hard)$")
+    meal_type: str = Field(..., alias="mealType", pattern="^(breakfast|lunch|dinner|snacks)$")
     season: Season
+    
+    # Tags and dietary info
+    tags: List[str] = Field(default_factory=list, description="Recipe tags")
+    allergen_info: List[str] = Field(default_factory=list, alias="allergenInfo", description="Allergens present")
+    dietary_info: List[str] = Field(default_factory=list, alias="dietaryInfo", description="Dietary categories (vegetarian, vegan, etc)")
+    
+    # Nutrition
+    nutrition: Optional[Nutrition] = Field(None, description="Nutritional information per serving")
     
     @validator('title')
     def validate_title(cls, v):
