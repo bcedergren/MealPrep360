@@ -40,13 +40,13 @@ jobs:
       - name: Run API Gateway tests
         working-directory: ./MealPrep360-API
         run: |
-          npm ci
+          npm install
           npm test || true
 
       - name: Run Frontend tests
         working-directory: ./MealPrep360
         run: |
-          npm ci
+          npm install
           npm test || true
 
   # Build and push images
