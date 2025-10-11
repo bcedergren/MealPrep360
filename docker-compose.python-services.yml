@@ -10,10 +10,21 @@ services:
     container_name: mealprep360-ai-service
     ports:
       - "8000:8000"
-    env_file:
-      - ./MealPrep360-AIService/.env
+    environment:
+      - ENVIRONMENT=development
+      - DEBUG=True
+      - OPENAI_API_KEY=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
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_DB=0
+      - RATE_LIMIT_REQUESTS=10
+      - CACHE_TTL=3600
+      - ENABLE_CACHING=True
+      - USE_OPENROUTER=False
     networks:
       - python-services
+    depends_on:
+      - redis
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
