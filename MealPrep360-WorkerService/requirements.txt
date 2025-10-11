@@ -1,0 +1,22 @@
+# Celery Task Queue
+celery==5.3.4
+redis==5.0.1
+kombu==5.3.4
+
+# Celery Monitoring
+flower==2.0.1
+
+# Database
+motor==3.3.2
+pymongo==4.6.1
+
+# HTTP Client
+httpx==0.26.0
+
+# Utilities
+python-dotenv==1.0.0
+loguru==0.7.2
+
+# Testing
+pytest==7.4.4
+
