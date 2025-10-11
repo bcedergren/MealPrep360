@@ -1,0 +1,334 @@
+// Prisma Schema for MealPrep360
+// PostgreSQL Database
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// User Management
+// ============================================
+
+model User {
+  id                String              @id @default(uuid())
+  clerkId           String              @unique @map("clerk_id")
+  email             String              @unique
+  name              String?
+  avatarUrl         String?             @map("avatar_url")
+  
+  // Relations
+  subscription      Subscription?
+  preferences       UserPreferences?
+  recipes           Recipe[]
+  mealPlans         MealPlan[]
+  shoppingLists     ShoppingList[]
+  posts             Post[]
+  postLikes         PostLike[]
+  postComments      PostComment[]
+  blogPosts         BlogPost[]
+  
+  createdAt         DateTime            @default(now()) @map("created_at")
+  updatedAt         DateTime            @updatedAt @map("updated_at")
+
+  @@map("users")
+}
+
+model Subscription {
+  id                      String    @id @default(uuid())
+  userId                  String    @unique @map("user_id")
+  plan                    String    // free, basic, premium
+  status                  String    // active, cancelled, expired
+  stripeCustomerId        String?   @map("stripe_customer_id")
+  stripeSubscriptionId    String?   @map("stripe_subscription_id")
+  currentPeriodStart      DateTime? @map("current_period_start")
+  currentPeriodEnd        DateTime? @map("current_period_end")
+  
+  user                    User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  createdAt               DateTime  @default(now()) @map("created_at")
+  updatedAt               DateTime  @updatedAt @map("updated_at")
+
+  @@map("subscriptions")
+}
+
+model UserPreferences {
+  id                String   @id @default(uuid())
+  userId            String   @unique @map("user_id")
+  dietaryRestrictions String[] @map("dietary_restrictions")
+  allergens         String[]
+  cuisinePreferences String[] @map("cuisine_preferences")
+  skillLevel        String?  @map("skill_level") // beginner, intermediate, advanced
+  
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  @@map("user_preferences")
+}
+
+// ============================================
+// Recipe Management
+// ============================================
+
+model Recipe {
+  id              String              @id @default(uuid())
+  userId          String              @map("user_id")
+  title           String
+  description     String?
+  instructions    String[]
+  prepTime        Int?                @map("prep_time") // minutes
+  cookTime        Int?                @map("cook_time") // minutes
+  servings        Int?
+  difficulty      String?             // easy, medium, hard
+  isPublic        Boolean             @default(false) @map("is_public")
+  imageUrl        String?             @map("image_url")
+  source          String?             // url or "user-created"
+  
+  // Relations
+  user            User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  ingredients     RecipeIngredient[]
+  nutrition       RecipeNutrition?
+  tags            RecipeTag[]
+  mealPlanItems   MealPlanItem[]
+  posts           Post[]
+  
+  createdAt       DateTime            @default(now()) @map("created_at")
+  updatedAt       DateTime            @updatedAt @map("updated_at")
+
+  @@index([userId])
+  @@index([isPublic])
+  @@map("recipes")
+}
+
+model Ingredient {
+  id              String              @id @default(uuid())
+  name            String              @unique
+  category        String?             // produce, meat, dairy, etc.
+  defaultUnit     String?             @map("default_unit")
+  
+  // Relations
+  recipeIngredients RecipeIngredient[]
+  shoppingListItems ShoppingListItem[]
+  
+  createdAt       DateTime            @default(now()) @map("created_at")
+
+  @@map("ingredients")
+}
+
+model RecipeIngredient {
+  id            String      @id @default(uuid())
+  recipeId      String      @map("recipe_id")
+  ingredientId  String      @map("ingredient_id")
+  amount        Decimal     @db.Decimal(10, 2)
+  unit          String
+  notes         String?
+  
+  recipe        Recipe      @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+  ingredient    Ingredient  @relation(fields: [ingredientId], references: [id], onDelete: Cascade)
+  
+  createdAt     DateTime    @default(now()) @map("created_at")
+
+  @@unique([recipeId, ingredientId])
+  @@map("recipe_ingredients")
+}
+
+model RecipeNutrition {
+  id          String   @id @default(uuid())
+  recipeId    String   @unique @map("recipe_id")
+  calories    Int?
+  protein     Decimal? @db.Decimal(10, 2)
+  carbs       Decimal? @db.Decimal(10, 2)
+  fat         Decimal? @db.Decimal(10, 2)
+  fiber       Decimal? @db.Decimal(10, 2)
+  sugar       Decimal? @db.Decimal(10, 2)
+  sodium      Decimal? @db.Decimal(10, 2)
+  
+  recipe      Recipe   @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+
+  @@map("recipe_nutrition")
+}
+
+model Tag {
+  id          String      @id @default(uuid())
+  name        String      @unique
+  category    String?     // meal-type, cuisine, dietary, etc.
+  
+  recipes     RecipeTag[]
+  
+  createdAt   DateTime    @default(now()) @map("created_at")
+
+  @@map("tags")
+}
+
+model RecipeTag {
+  recipeId    String   @map("recipe_id")
+  tagId       String   @map("tag_id")
+  
+  recipe      Recipe   @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+  tag         Tag      @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([recipeId, tagId])
+  @@map("recipe_tags")
+}
+
+// ============================================
+// Meal Planning
+// ============================================
+
+model MealPlan {
+  id            String          @id @default(uuid())
+  userId        String          @map("user_id")
+  name          String?
+  startDate     DateTime        @map("start_date") @db.Date
+  endDate       DateTime        @map("end_date") @db.Date
+  
+  // Relations
+  user          User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items         MealPlanItem[]
+  shoppingLists ShoppingList[]
+  
+  createdAt     DateTime        @default(now()) @map("created_at")
+  updatedAt     DateTime        @updatedAt @map("updated_at")
+
+  @@index([userId])
+  @@map("meal_plans")
+}
+
+model MealPlanItem {
+  id            String      @id @default(uuid())
+  mealPlanId    String      @map("meal_plan_id")
+  recipeId      String      @map("recipe_id")
+  dayOfWeek     Int         @map("day_of_week") // 0=Sunday, 6=Saturday
+  mealType      String      @map("meal_type") // breakfast, lunch, dinner, snack
+  servings      Int         @default(1)
+  notes         String?
+  
+  mealPlan      MealPlan    @relation(fields: [mealPlanId], references: [id], onDelete: Cascade)
+  recipe        Recipe      @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+  
+  createdAt     DateTime    @default(now()) @map("created_at")
+
+  @@map("meal_plan_items")
+}
+
+// ============================================
+// Shopping Lists
+// ============================================
+
+model ShoppingList {
+  id            String              @id @default(uuid())
+  userId        String              @map("user_id")
+  mealPlanId    String?             @map("meal_plan_id")
+  name          String?
+  
+  // Relations
+  user          User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  mealPlan      MealPlan?           @relation(fields: [mealPlanId], references: [id], onDelete: SetNull)
+  items         ShoppingListItem[]
+  
+  createdAt     DateTime            @default(now()) @map("created_at")
+  updatedAt     DateTime            @updatedAt @map("updated_at")
+
+  @@index([userId])
+  @@map("shopping_lists")
+}
+
+model ShoppingListItem {
+  id              String        @id @default(uuid())
+  shoppingListId  String        @map("shopping_list_id")
+  ingredientId    String        @map("ingredient_id")
+  amount          Decimal       @db.Decimal(10, 2)
+  unit            String
+  checked         Boolean       @default(false)
+  notes           String?
+  
+  shoppingList    ShoppingList  @relation(fields: [shoppingListId], references: [id], onDelete: Cascade)
+  ingredient      Ingredient    @relation(fields: [ingredientId], references: [id], onDelete: Cascade)
+  
+  createdAt       DateTime      @default(now()) @map("created_at")
+
+  @@map("shopping_list_items")
+}
+
+// ============================================
+// Social Features
+// ============================================
+
+model Post {
+  id          String        @id @default(uuid())
+  userId      String        @map("user_id")
+  recipeId    String?       @map("recipe_id")
+  content     String
+  imageUrl    String?       @map("image_url")
+  
+  // Relations
+  user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  recipe      Recipe?       @relation(fields: [recipeId], references: [id], onDelete: SetNull)
+  likes       PostLike[]
+  comments    PostComment[]
+  
+  createdAt   DateTime      @default(now()) @map("created_at")
+  updatedAt   DateTime      @updatedAt @map("updated_at")
+
+  @@index([userId])
+  @@index([createdAt])
+  @@map("posts")
+}
+
+model PostLike {
+  userId      String   @map("user_id")
+  postId      String   @map("post_id")
+  
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  post        Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  @@id([userId, postId])
+  @@map("post_likes")
+}
+
+model PostComment {
+  id          String   @id @default(uuid())
+  postId      String   @map("post_id")
+  userId      String   @map("user_id")
+  content     String
+  
+  post        Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("post_comments")
+}
+
+// ============================================
+// Blog
+// ============================================
+
+model BlogPost {
+  id            String    @id @default(uuid())
+  authorId      String?   @map("author_id")
+  title         String
+  slug          String    @unique
+  content       String
+  excerpt       String?
+  featuredImage String?   @map("featured_image")
+  published     Boolean   @default(false)
+  publishedAt   DateTime? @map("published_at")
+  
+  author        User?     @relation(fields: [authorId], references: [id], onDelete: SetNull)
+  
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  @@map("blog_posts")
+}
+

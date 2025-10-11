@@ -1,0 +1,193 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'RDS PostgreSQL Database for MealPrep360'
+
+Parameters:
+  VPCStackName:
+    Type: String
+    Default: mealprep360-vpc
+    Description: Name of the VPC stack
+
+  DBInstanceClass:
+    Type: String
+    Default: db.t4g.micro
+    AllowedValues:
+      - db.t4g.micro
+      - db.t4g.small
+      - db.t3.micro
+      - db.t3.small
+    Description: Database instance class
+
+  DBName:
+    Type: String
+    Default: mealprep360
+    Description: Database name
+
+  DBUsername:
+    Type: String
+    Default: mealprep360admin
+    Description: Database master username
+
+  DBPassword:
+    Type: String
+    NoEcho: true
+    MinLength: 8
+    Description: Database master password
+
+  AllocatedStorage:
+    Type: Number
+    Default: 20
+    MinValue: 20
+    MaxValue: 100
+    Description: Allocated storage in GB
+
+Resources:
+  # DB Subnet Group
+  DBSubnetGroup:
+    Type: AWS::RDS::DBSubnetGroup
+    Properties:
+      DBSubnetGroupName: mealprep360-db-subnet-group
+      DBSubnetGroupDescription: Subnet group for MealPrep360 PostgreSQL
+      SubnetIds:
+        - Fn::ImportValue: !Sub '${VPCStackName}-PrivateSubnet1'
+        - Fn::ImportValue: !Sub '${VPCStackName}-PrivateSubnet2'
+      Tags:
+        - Key: Name
+          Value: mealprep360-db-subnet-group
+        - Key: Environment
+          Value: production
+
+  # Security Group for RDS
+  DBSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: mealprep360-db-sg
+      GroupDescription: Security group for MealPrep360 PostgreSQL
+      VpcId:
+        Fn::ImportValue: !Sub '${VPCStackName}-VPC'
+      SecurityGroupIngress:
+        # Allow from ECS security group
+        - IpProtocol: tcp
+          FromPort: 5432
+          ToPort: 5432
+          SourceSecurityGroupId:
+            Fn::ImportValue: !Sub '${VPCStackName}-ECSSecurityGroup'
+      Tags:
+        - Key: Name
+          Value: mealprep360-db-sg
+        - Key: Environment
+          Value: production
+
+  # RDS Parameter Group
+  DBParameterGroup:
+    Type: AWS::RDS::DBParameterGroup
+    Properties:
+      Description: Custom parameter group for MealPrep360 PostgreSQL
+      Family: postgres15
+      Parameters:
+        shared_preload_libraries: pg_stat_statements
+        log_statement: all
+        log_min_duration_statement: 1000
+      Tags:
+        - Key: Name
+          Value: mealprep360-db-params
+        - Key: Environment
+          Value: production
+
+  # RDS Instance
+  DBInstance:
+    Type: AWS::RDS::DBInstance
+    DeletionPolicy: Snapshot
+    Properties:
+      DBInstanceIdentifier: mealprep360-postgresql
+      Engine: postgres
+      EngineVersion: '15.4'
+      DBInstanceClass: !Ref DBInstanceClass
+      AllocatedStorage: !Ref AllocatedStorage
+      StorageType: gp3
+      StorageEncrypted: true
+      
+      DBName: !Ref DBName
+      MasterUsername: !Ref DBUsername
+      MasterUserPassword: !Ref DBPassword
+      
+      DBSubnetGroupName: !Ref DBSubnetGroup
+      VPCSecurityGroups:
+        - !Ref DBSecurityGroup
+      
+      DBParameterGroupName: !Ref DBParameterGroup
+      
+      BackupRetentionPeriod: 7
+      PreferredBackupWindow: '03:00-04:00'
+      PreferredMaintenanceWindow: 'sun:04:00-sun:05:00'
+      
+      EnableCloudwatchLogsExports:
+        - postgresql
+      
+      DeletionProtection: false
+      PubliclyAccessible: false
+      
+      Tags:
+        - Key: Name
+          Value: mealprep360-postgresql
+        - Key: Environment
+          Value: production
+
+  # Store DB credentials in Secrets Manager
+  DBSecret:
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      Name: mealprep360/postgresql
+      Description: PostgreSQL database credentials for MealPrep360
+      SecretString: !Sub |
+        {
+          "username": "${DBUsername}",
+          "password": "${DBPassword}",
+          "engine": "postgres",
+          "host": "${DBInstance.Endpoint.Address}",
+          "port": ${DBInstance.Endpoint.Port},
+          "dbname": "${DBName}",
+          "url": "postgresql://${DBUsername}:${DBPassword}@${DBInstance.Endpoint.Address}:${DBInstance.Endpoint.Port}/${DBName}"
+        }
+      Tags:
+        - Key: Name
+          Value: mealprep360-postgresql-secret
+        - Key: Environment
+          Value: production
+
+Outputs:
+  DBInstanceIdentifier:
+    Description: RDS instance identifier
+    Value: !Ref DBInstance
+    Export:
+      Name: !Sub '${AWS::StackName}-DBInstanceId'
+
+  DBEndpoint:
+    Description: RDS instance endpoint
+    Value: !GetAtt DBInstance.Endpoint.Address
+    Export:
+      Name: !Sub '${AWS::StackName}-DBEndpoint'
+
+  DBPort:
+    Description: RDS instance port
+    Value: !GetAtt DBInstance.Endpoint.Port
+    Export:
+      Name: !Sub '${AWS::StackName}-DBPort'
+
+  DBName:
+    Description: Database name
+    Value: !Ref DBName
+    Export:
+      Name: !Sub '${AWS::StackName}-DBName'
+
+  DBSecretArn:
+    Description: ARN of the Secrets Manager secret containing DB credentials
+    Value: !Ref DBSecret
+    Export:
+      Name: !Sub '${AWS::StackName}-DBSecretArn'
+
+  DatabaseURL:
+    Description: PostgreSQL connection string
+    Value: !Sub 'postgresql://${DBUsername}:${DBPassword}@${DBInstance.Endpoint.Address}:${DBInstance.Endpoint.Port}/${DBName}'
+    Export:
+      Name: !Sub '${AWS::StackName}-DatabaseURL'
+
