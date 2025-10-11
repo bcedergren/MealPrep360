@@ -25,10 +25,9 @@ COPY --from=dependencies /usr/local/bin /usr/local/bin
 
 # Copy application code
 COPY app/ /app/app/
-COPY prompts/ /app/prompts/
 
-# Create logs directory
-RUN mkdir -p /app/logs
+# Create directories
+RUN mkdir -p /app/prompts /app/logs
 
 # Create non-root user
 RUN useradd -m -u 1000 aiuser && \
